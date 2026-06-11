@@ -1,28 +1,21 @@
-name: Zafronix World Cup API Check
+- name: Test match endpoints
+  run: |
+    echo "===== MATCHES ====="
 
-on:
-  workflow_dispatch:
+    curl --request GET \
+      --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments/2026/matches" \
+      --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
 
-jobs:
-  zafronix-check:
-    runs-on: ubuntu-latest
+    echo ""
+    echo "===== GROUPS ====="
 
-    steps:
-      - name: Test Zafronix correct endpoints
-        run: |
-          echo "===== /tournaments ====="
-          curl --request GET \
-            --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments" \
-            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}" \
-            --output tournaments.json
+    curl --request GET \
+      --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments/2026/groups" \
+      --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
 
-          cat tournaments.json
+    echo ""
+    echo "===== STAGES ====="
 
-          echo ""
-          echo "===== /tournaments/2026 ====="
-          curl --request GET \
-            --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments/2026" \
-            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}" \
-            --output wc2026.json
-
-          cat wc2026.json
+    curl --request GET \
+      --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments/2026/stages" \
+      --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
