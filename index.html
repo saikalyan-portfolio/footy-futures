@@ -316,13 +316,14 @@
     <h3>Create Your Player Name & Private Passphrase</h3>
     
       <p style="color: var(--text-muted); font-size: 12px; margin: -2px 0 12px;">
-        Use a unique name/passphrase you can remember. It identifies your bracket and helps prevent duplicate entries. Keep it safe — it cannot be recovered later.
+        Choose a unique player name / passphrase you can remember. This becomes your bracket identity and cannot be used by another player.
       </p>
 
     <div class="passphrase-row">
       <input type="text" id="passphrase" placeholder="e.g. sai-neon-bracket" autocomplete="off" spellcheck="false">
       <button class="btn-gen" onclick="generatePassphrase()">Auto-Generate</button>
     </div>
+    <div id="player-name-status" style="margin-top:10px; font-size:12px; font-weight:800; color:var(--text-muted);"></div>
   </div>
 </div>
 
@@ -1178,6 +1179,93 @@ function downloadSubmittedBracketPDF() {
 }
 
 
+
+function normalizePlayerName(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9_-]/g, '');
+}
+
+async function playerNameExists(playerName) {
+  if (!supabaseClient) return false;
+
+  const normalized = normalizePlayerName(playerName);
+  if (!normalized) return false;
+
+  const { data, error } = await supabaseClient
+    .from('predictions')
+    .select('id')
+    .eq('display_name', normalized)
+    .limit(1);
+
+  if (error) {
+    console.error('Player name check failed:', error);
+    throw error;
+  }
+
+  return Array.isArray(data) && data.length > 0;
+}
+
+async function checkPlayerNameAvailability(showAvailableMessage = false) {
+  const input = document.getElementById('passphrase');
+  const status = document.getElementById('player-name-status');
+  if (!input) return false;
+
+  const normalized = normalizePlayerName(input.value);
+  input.value = normalized;
+
+  if (!normalized) {
+    if (status) {
+      status.innerText = '';
+      status.style.color = 'var(--text-muted)';
+    }
+    return false;
+  }
+
+  try {
+    const exists = await playerNameExists(normalized);
+    if (exists) {
+      if (status) {
+        status.innerText = 'This player name already exists. Please choose another one.';
+        status.style.color = 'var(--danger)';
+      }
+      return false;
+    }
+
+    if (status && showAvailableMessage) {
+      status.innerText = 'Player name available.';
+      status.style.color = 'var(--accent-lime)';
+    }
+    return true;
+  } catch (err) {
+    console.error(err);
+    if (status) {
+      status.innerText = 'Could not check name availability. It will be verified when you submit.';
+      status.style.color = 'var(--text-muted)';
+    }
+    return true;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('passphrase');
+  if (!input) return;
+
+  let nameCheckTimer = null;
+
+  input.addEventListener('input', () => {
+    clearTimeout(nameCheckTimer);
+    nameCheckTimer = setTimeout(() => checkPlayerNameAvailability(false), 650);
+  });
+
+  input.addEventListener('blur', () => {
+    checkPlayerNameAvailability(true);
+  });
+});
+
+
 async function submitBracket() {
   try {
     if (isEntryClosed()) {
@@ -1189,10 +1277,19 @@ async function submitBracket() {
       return;
     }
 
-    const passphrase = document.getElementById('passphrase').value.trim();
+    const rawPassphrase = document.getElementById('passphrase').value.trim();
+    const passphrase = normalizePlayerName(rawPassphrase);
 
     if (!passphrase) {
-      alert('Please enter a passphrase first.');
+      alert('Please enter a valid player name / passphrase first. Use letters, numbers, hyphens, or underscores.');
+      return;
+    }
+
+    document.getElementById('passphrase').value = passphrase;
+
+    const nameAvailable = await checkPlayerNameAvailability(false);
+    if (!nameAvailable) {
+      alert('This player name already exists. Please choose another one.');
       return;
     }
 
@@ -1224,7 +1321,15 @@ async function submitBracket() {
 
     if (error) {
       console.error(error);
-      alert('Save failed: ' + error.message);
+      if (
+        error.code === '23505' ||
+        String(error.message || '').toLowerCase().includes('duplicate') ||
+        String(error.message || '').toLowerCase().includes('unique')
+      ) {
+        alert('This player name already exists. Please choose another one.');
+      } else {
+        alert('Save failed: ' + error.message);
+      }
     } else {
       console.log(data);
       document.getElementById('save-status').innerText = `Saved successfully. Champion: ${bracketData.champion?.name || 'Not resolved'}`;
