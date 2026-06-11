@@ -1,4 +1,4 @@
-name: World Cup Fixture Check
+name: Football Data World Cup Check
 
 on:
   workflow_dispatch:
@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Fetch raw response
+      - name: Fetch football-data.org World Cup matches
         run: |
           curl --request GET \
-            --url "https://v3.football.api-sports.io/fixtures?league=1&season=2026" \
-            --header "x-apisports-key: ${{ secrets.API_FOOTBALL_KEY }}" \
+            --url "https://api.football-data.org/v4/competitions/WC/matches" \
+            --header "X-Auth-Token: ${{ secrets.FOOTBALL_DATA_KEY }}" \
             --output response.json
 
           echo "===== RAW RESPONSE ====="
