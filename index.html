@@ -106,6 +106,36 @@
   .score-input:focus { border-color: var(--accent-lime); background: rgba(57, 255, 20, 0.05); }
   .score-input::-webkit-outer-spin-button, .score-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
+
+  /* ── Match Locking ── */
+  .match-row.locked-match {
+    opacity: 0.58;
+    filter: grayscale(0.7);
+    background: rgba(148, 163, 184, 0.08);
+  }
+  .match-row.locked-match .score-input {
+    border-color: rgba(148, 163, 184, 0.22);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.42);
+    cursor: not-allowed;
+  }
+  .match-lock-badge {
+    display: none;
+    grid-column: 1 / -1;
+    color: #ffb3bd;
+    border: 1px solid rgba(255, 71, 87, 0.35);
+    background: rgba(255, 71, 87, 0.08);
+    border-radius: 999px;
+    padding: 5px 10px;
+    width: fit-content;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 2px;
+  }
+  .match-row.locked-match .match-lock-badge { display: inline-block; }
+
   /* ── Tables Layout ── */
   .table-padding { padding: 12px 16px; background: rgba(0, 0, 0, 0.15); }
   .matrix-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
@@ -303,11 +333,11 @@
 
 <section class="hero">
   <div class="hero-eyebrow">FIFA World Cup 2026</div>
-  <h1 class="hero-title">Predict the <em>Winner.</em></h1>
+  <h1 class="hero-title">Predict the <em>Winner</em></h1>
   <p class="hero-sub" id="entry-deadline-note">
     Submit before the tournament begins to maximise your scoring potential.
     Entries remain open until kickoff of the final Matchday 1 fixture.
-    Any matches already played will score 0 points.
+    Any matches already started will be locked and score 0 points.
   </p>
 </section>
 
@@ -510,6 +540,121 @@ const TOURNAMENT_GROUPS = {
   L: [['gh','pa'], ['gb-eng','hr'], ['gb-eng','gh'], ['pa','hr'], ['pa','gb-eng'], ['hr','gh']]
 };
 
+
+
+// ── MATCH KICKOFF LOCKS (UTC) ──
+// Users may still submit before the global entry deadline, but matches lock at kickoff.
+const MATCH_KICKOFFS = {
+  'gA_m0': '2026-06-11T19:00:00.000Z',
+  'gA_m1': '2026-06-12T02:00:00.000Z',
+  'gA_m2': '2026-06-18T16:00:00.000Z',
+  'gA_m3': '2026-06-19T01:00:00.000Z',
+  'gA_m4': '2026-06-25T01:00:00.000Z',
+  'gA_m5': '2026-06-25T01:00:00.000Z',
+  'gB_m0': '2026-06-12T19:00:00.000Z',
+  'gB_m1': '2026-06-13T19:00:00.000Z',
+  'gB_m2': '2026-06-18T19:00:00.000Z',
+  'gB_m3': '2026-06-18T22:00:00.000Z',
+  'gB_m4': '2026-06-24T19:00:00.000Z',
+  'gB_m5': '2026-06-24T19:00:00.000Z',
+  'gC_m0': '2026-06-14T01:00:00.000Z',
+  'gC_m1': '2026-06-13T22:00:00.000Z',
+  'gC_m2': '2026-06-20T00:30:00.000Z',
+  'gC_m3': '2026-06-19T22:00:00.000Z',
+  'gC_m4': '2026-06-24T22:00:00.000Z',
+  'gC_m5': '2026-06-24T22:00:00.000Z',
+  'gD_m0': '2026-06-13T01:00:00.000Z',
+  'gD_m1': '2026-06-14T04:00:00.000Z',
+  'gD_m2': '2026-06-20T03:00:00.000Z',
+  'gD_m3': '2026-06-19T19:00:00.000Z',
+  'gD_m4': '2026-06-26T02:00:00.000Z',
+  'gD_m5': '2026-06-26T02:00:00.000Z',
+  'gE_m0': '2026-06-14T23:00:00.000Z',
+  'gE_m1': '2026-06-14T17:00:00.000Z',
+  'gE_m2': '2026-06-20T20:00:00.000Z',
+  'gE_m3': '2026-06-21T00:00:00.000Z',
+  'gE_m4': '2026-06-25T20:00:00.000Z',
+  'gE_m5': '2026-06-25T20:00:00.000Z',
+  'gF_m0': '2026-06-14T20:00:00.000Z',
+  'gF_m1': '2026-06-15T02:00:00.000Z',
+  'gF_m2': '2026-06-20T17:00:00.000Z',
+  'gF_m3': '2026-06-21T04:00:00.000Z',
+  'gF_m4': '2026-06-25T23:00:00.000Z',
+  'gF_m5': '2026-06-25T23:00:00.000Z',
+  'gG_m0': '2026-06-16T01:00:00.000Z',
+  'gG_m1': '2026-06-15T19:00:00.000Z',
+  'gG_m2': '2026-06-21T19:00:00.000Z',
+  'gG_m3': '2026-06-22T01:00:00.000Z',
+  'gG_m4': '2026-06-27T03:00:00.000Z',
+  'gG_m5': '2026-06-27T03:00:00.000Z',
+  'gH_m0': '2026-06-15T22:00:00.000Z',
+  'gH_m1': '2026-06-15T16:00:00.000Z',
+  'gH_m2': '2026-06-21T22:00:00.000Z',
+  'gH_m3': '2026-06-21T16:00:00.000Z',
+  'gH_m4': '2026-06-27T00:00:00.000Z',
+  'gH_m5': '2026-06-27T00:00:00.000Z',
+  'gI_m0': '2026-06-16T19:00:00.000Z',
+  'gI_m1': '2026-06-16T22:00:00.000Z',
+  'gI_m2': '2026-06-23T00:00:00.000Z',
+  'gI_m3': '2026-06-22T21:00:00.000Z',
+  'gI_m4': '2026-06-26T19:00:00.000Z',
+  'gI_m5': '2026-06-26T19:00:00.000Z',
+  'gJ_m0': '2026-06-17T01:00:00.000Z',
+  'gJ_m1': '2026-06-17T04:00:00.000Z',
+  'gJ_m2': '2026-06-22T17:00:00.000Z',
+  'gJ_m3': '2026-06-23T03:00:00.000Z',
+  'gJ_m4': '2026-06-28T02:00:00.000Z',
+  'gJ_m5': '2026-06-28T02:00:00.000Z',
+  'gK_m0': '2026-06-17T17:00:00.000Z',
+  'gK_m1': '2026-06-18T03:00:00.000Z',
+  'gK_m2': '2026-06-23T17:00:00.000Z',
+  'gK_m3': '2026-06-24T02:00:00.000Z',
+  'gK_m4': '2026-06-27T23:30:00.000Z',
+  'gK_m5': '2026-06-27T23:30:00.000Z',
+  'gL_m0': '2026-06-17T23:00:00.000Z',
+  'gL_m1': '2026-06-17T20:00:00.000Z',
+  'gL_m2': '2026-06-23T20:00:00.000Z',
+  'gL_m3': '2026-06-23T23:00:00.000Z',
+  'gL_m4': '2026-06-27T21:00:00.000Z',
+  'gL_m5': '2026-06-27T21:00:00.000Z'
+};
+
+function getMatchKickoff(matchId) {
+  const value = MATCH_KICKOFFS[matchId];
+  return value ? new Date(value) : null;
+}
+
+function isMatchLocked(matchId, referenceDate = new Date()) {
+  const kickoff = getMatchKickoff(matchId);
+  return !!kickoff && referenceDate.getTime() >= kickoff.getTime();
+}
+
+function getScoreValueForCalculation(inputId) {
+  const raw = document.getElementById(inputId)?.value;
+  if (raw !== undefined && raw !== '') return raw;
+  const matchId = inputId.replace(/_[ha]$/, '');
+  // For late entries, locked blank matches are treated as 0-0 only for table/R32 calculation.
+  // The submitted JSON still marks them lockedAtSubmit=true so the scorer can award 0 points.
+  return isMatchLocked(matchId) ? '0' : raw;
+}
+
+function applyMatchLocks() {
+  Object.keys(MATCH_KICKOFFS).forEach(matchId => {
+    const locked = isMatchLocked(matchId);
+    const homeInput = document.getElementById(`${matchId}_h`);
+    const awayInput = document.getElementById(`${matchId}_a`);
+    const row = document.getElementById(`${matchId}_row`);
+    if (row) row.classList.toggle('locked-match', locked);
+    [homeInput, awayInput].forEach(input => {
+      if (!input) return;
+      input.disabled = locked;
+      input.title = locked ? 'Locked — this match has already started and will score 0 points for late submissions.' : '';
+    });
+  });
+}
+
+setInterval(applyMatchLocks, 30000);
+
 const R32_MATCHUPS = [
   ['Runner-up A', 'Runner-up B'],
   ['Winner E', '3rd A/B/C/D/F'],
@@ -560,12 +705,13 @@ function initEngine() {
     TOURNAMENT_GROUPS[gid].forEach((m, idx) => {
       const mid = `g${gid}_m${idx}`;
       matchHTML += `
-        <div class="match-row">
+        <div class="match-row" id="${mid}_row" data-match-id="${mid}">
           <div class="match-date">M${idx+1}</div>
           <div class="team-zone home"><span>${TEAM_DATA[m[0]]}</span><img class="flag-box" src="https://flagcdn.com/w40/${m[0]}.png"></div>
           <input type="number" class="score-input" id="${mid}_h" min="0" oninput="runStandingsUpdate('${gid}')" placeholder="-">
           <input type="number" class="score-input" id="${mid}_a" min="0" oninput="runStandingsUpdate('${gid}')" placeholder="-">
           <div class="team-zone away"><img class="flag-box" src="https://flagcdn.com/w40/${m[1]}.png"><span>${TEAM_DATA[m[1]]}</span></div>
+          <div class="match-lock-badge" id="${mid}_lock_badge">Locked — match started. This match will score 0 for late submissions.</div>
         </div>`;
     });
     matchGrid.innerHTML += `
@@ -639,6 +785,7 @@ function initEngine() {
   });
 
   clearAllKnockoutInputs();
+  applyMatchLocks();
 }
 
 function runStandingsUpdate(gid) {
@@ -651,8 +798,8 @@ function runStandingsUpdate(gid) {
     const aInput = document.getElementById(`g${gid}_m${idx}_a`);
     if (!hInput || !aInput) return;
     
-    const hVal = hInput.value;
-    const aVal = aInput.value;
+    const hVal = getScoreValueForCalculation(`g${gid}_m${idx}_h`);
+    const aVal = getScoreValueForCalculation(`g${gid}_m${idx}_a`);
 
     if (hVal !== '' && aVal !== '') {
       const h = parseInt(hVal);
@@ -704,8 +851,8 @@ function getGroupStandings(gid) {
   teamsInGroup.forEach(t => records[t] = { team: t, group: gid, p:0, gd:0, gf:0, ga:0, pts:0 });
 
   TOURNAMENT_GROUPS[gid].forEach((m, idx) => {
-    const hVal = document.getElementById(`g${gid}_m${idx}_h`)?.value;
-    const aVal = document.getElementById(`g${gid}_m${idx}_a`)?.value;
+    const hVal = getScoreValueForCalculation(`g${gid}_m${idx}_h`);
+    const aVal = getScoreValueForCalculation(`g${gid}_m${idx}_a`);
     if (hVal !== '' && aVal !== '' && hVal !== undefined && aVal !== undefined) {
       const h = parseInt(hVal, 10);
       const a = parseInt(aVal, 10);
@@ -734,8 +881,10 @@ function compareTeamRecords(a, b) {
 
 function isGroupComplete(gid) {
   return TOURNAMENT_GROUPS[gid].every((_, idx) => {
-    const h = document.getElementById(`g${gid}_m${idx}_h`)?.value;
-    const a = document.getElementById(`g${gid}_m${idx}_a`)?.value;
+    const matchId = `g${gid}_m${idx}`;
+    if (isMatchLocked(matchId)) return true;
+    const h = document.getElementById(`${matchId}_h`)?.value;
+    const a = document.getElementById(`${matchId}_a`)?.value;
     return h !== '' && a !== '' && h !== undefined && a !== undefined;
   });
 }
@@ -1041,8 +1190,10 @@ function validateBracketReady() {
   const missingGroupScores = [];
   Object.keys(TOURNAMENT_GROUPS).forEach(gid => {
     TOURNAMENT_GROUPS[gid].forEach((m, idx) => {
-      const h = document.getElementById(`g${gid}_m${idx}_h`)?.value;
-      const a = document.getElementById(`g${gid}_m${idx}_a`)?.value;
+      const matchId = `g${gid}_m${idx}`;
+      if (isMatchLocked(matchId)) return;
+      const h = document.getElementById(`${matchId}_h`)?.value;
+      const a = document.getElementById(`${matchId}_a`)?.value;
       if (h === '' || a === '') missingGroupScores.push(`Group ${gid} Match ${idx + 1}`);
     });
   });
@@ -1081,7 +1232,9 @@ function validateBracketReady() {
 function collectBracketData() {
   const qualifiers = getTournamentQualifiers();
   const champion = getKnockoutWinner('final', 1);
+  const submittedAt = new Date();
   const data = {
+    submitted_at_client: submittedAt.toISOString(),
     groups: {},
     group_standings: {},
     best_third_place_teams: qualifiers.bestThirds.map(r => ({ group: r.group, team: r.team, name: TEAM_DATA[r.team], pts: r.pts, gd: r.gd, gf: r.gf, ga: r.ga })),
@@ -1093,13 +1246,18 @@ function collectBracketData() {
   Object.keys(TOURNAMENT_GROUPS).forEach(gid => {
     data.groups[gid] = [];
     TOURNAMENT_GROUPS[gid].forEach((m, idx) => {
+      const matchId = `g${gid}_m${idx}`;
+      const lockedAtSubmit = isMatchLocked(matchId, submittedAt);
       data.groups[gid].push({
+        matchId,
         home: m[0],
         homeName: TEAM_DATA[m[0]],
         away: m[1],
         awayName: TEAM_DATA[m[1]],
-        homeScore: document.getElementById(`g${gid}_m${idx}_h`)?.value ?? '',
-        awayScore: document.getElementById(`g${gid}_m${idx}_a`)?.value ?? ''
+        homeScore: document.getElementById(`${matchId}_h`)?.value ?? '',
+        awayScore: document.getElementById(`${matchId}_a`)?.value ?? '',
+        kickoffUtc: MATCH_KICKOFFS[matchId] || null,
+        lockedAtSubmit
       });
     });
     data.group_standings[gid] = qualifiers.groups[gid].standings.map((r, index) => ({
@@ -1304,6 +1462,8 @@ async function submitBracket() {
       alert('This player name already exists. Please choose another one.');
       return;
     }
+
+    applyMatchLocks();
 
     // Do not call updateR32AutoPopulate() here: it rebuilds R32 and clears downstream knockout scores.
     // R32 is already populated when the player completes group-stage predictions.
