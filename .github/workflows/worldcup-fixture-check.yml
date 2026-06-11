@@ -1,21 +1,10 @@
-- name: Test match endpoints
-  run: |
-    echo "===== MATCHES ====="
+name: Placeholder
 
-    curl --request GET \
-      --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments/2026/matches" \
-      --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
+on:
+  workflow_dispatch:
 
-    echo ""
-    echo "===== GROUPS ====="
-
-    curl --request GET \
-      --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments/2026/groups" \
-      --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
-
-    echo ""
-    echo "===== STAGES ====="
-
-    curl --request GET \
-      --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments/2026/stages" \
-      --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "placeholder"
