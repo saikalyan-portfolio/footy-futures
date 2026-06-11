@@ -286,7 +286,6 @@
     background: rgba(255,255,255,0.12) !important;
     border-color: rgba(255,255,255,0.45) !important;
 }
-
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -302,18 +301,7 @@
   </nav>
 </header>
 
-<section class="hero">
-  <div class="hero-eyebrow">FIFA World Cup 2026</div>
-  <h1 class="hero-title">Predict the <em>Winner</em></h1>
-  <p class="hero-sub">Predict the entire World Cup from group stages to the final. Lock in your bracket and watch the tournament unfold. Follow the leaderboard to see how your predictions stack up against everyone else.</p>
-</section>
-
-<div class="countdown-wrap">
-  <div class="countdown-card">
-    <div class="countdown-label" id="entry-countdown-label">Entries close in</div>
-    <div class="countdown-time" id="entry-countdown">Loading...</div>
-  </div>
-  <p class="countdown-note" id="entry-deadline-note">
+<p class="countdown-note" id="entry-deadline-note">
     Submit before the tournament begins to maximise your scoring potential. Entries remain open until kickoff of the final Matchday 1 fixture. Any matches already played will score 0 points.
   </p>
 </div>
@@ -862,6 +850,8 @@ function resolveThirdPlaceSlots(bestThirds) {
   return Object.fromEntries(Object.entries(assignment).map(([slot, group]) => [slot, byGroup[group]]));
 }
 
+// Rebuilds R32 from group standings. This intentionally clears downstream knockout rounds when group predictions change.
+// Do NOT call this inside submitBracket(), otherwise R16/QF/SF/Final scores are erased before validation.
 function updateR32AutoPopulate() {
   if (!document.getElementById('r32_m1_t1')) return;
 
@@ -1159,73 +1149,31 @@ function downloadSubmittedBracketPDF() {
   const totalGoals = b.total_goals || '—';
   const groups = b.group_standings || {};
   const knockouts = b.knockouts || {};
-
   const escape = value => String(value ?? '')
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 
   const groupHtml = Object.entries(groups).map(([gid, standings]) => `
-    <section class="group-block">
-      <h3>Group ${escape(gid)}</h3>
-      <table>
-        <thead><tr><th>#</th><th>Team</th><th>Pts</th><th>GD</th><th>GF</th></tr></thead>
-        <tbody>${(standings || []).map((t, idx) => `
-          <tr><td>${idx + 1}</td><td>${escape(t.name || t.team || '—')}</td><td>${escape(t.pts ?? '—')}</td><td>${escape(t.gd ?? '—')}</td><td>${escape(t.gf ?? '—')}</td></tr>
-        `).join('')}</tbody>
-      </table>
-    </section>
-  `).join('');
+    <section><h3>Group ${escape(gid)}</h3>
+      <table><thead><tr><th>#</th><th>Team</th><th>Pts</th><th>GD</th><th>GF</th></tr></thead>
+      <tbody>${(standings || []).map((t, idx) => `<tr><td>${idx+1}</td><td>${escape(t.name || t.team || '—')}</td><td>${escape(t.pts ?? '—')}</td><td>${escape(t.gd ?? '—')}</td><td>${escape(t.gf ?? '—')}</td></tr>`).join('')}</tbody></table>
+    </section>`).join('');
 
   const stageTitle = stage => ({ r32:'Round of 32', r16:'Round of 16', qf:'Quarter-Finals', sf:'Semi-Finals', final:'Final' }[stage] || stage);
-
   const koHtml = ['r32','r16','qf','sf','final'].map(stage => `
-    <section class="stage-block">
-      <h3>${stageTitle(stage)}</h3>
-      <table>
-        <thead><tr><th>#</th><th>Match</th><th>90'</th><th>AET</th><th>Pens</th><th>Winner</th><th>Method</th></tr></thead>
-        <tbody>${(knockouts[stage] || []).map(m => `
-          <tr>
-            <td>${escape(m.match || '')}</td>
-            <td>${escape(m.team1 || '—')} vs ${escape(m.team2 || '—')}</td>
-            <td>${escape(m.score1 || '—')}-${escape(m.score2 || '—')}</td>
-            <td>${escape(m.afterExtraTime1 || '—')}-${escape(m.afterExtraTime2 || '—')}</td>
-            <td>${escape(m.penalties1 || '—')}-${escape(m.penalties2 || '—')}</td>
-            <td><strong>${escape(m.winner || '—')}</strong></td>
-            <td>${escape((m.resolutionMethod || '—').replace('_', ' '))}</td>
-          </tr>
-        `).join('')}</tbody>
-      </table>
-    </section>
-  `).join('');
+    <section><h3>${stageTitle(stage)}</h3>
+      <table><thead><tr><th>#</th><th>Match</th><th>90'</th><th>AET</th><th>Pens</th><th>Winner</th><th>Method</th></tr></thead>
+      <tbody>${(knockouts[stage] || []).map(m => `<tr><td>${escape(m.match || '')}</td><td>${escape(m.team1 || '—')} vs ${escape(m.team2 || '—')}</td><td>${escape(m.score1 || '—')}-${escape(m.score2 || '—')}</td><td>${escape(m.afterExtraTime1 || '—')}-${escape(m.afterExtraTime2 || '—')}</td><td>${escape(m.penalties1 || '—')}-${escape(m.penalties2 || '—')}</td><td><strong>${escape(m.winner || '—')}</strong></td><td>${escape((m.resolutionMethod || '—').replace('_', ' '))}</td></tr>`).join('')}</tbody></table>
+    </section>`).join('');
 
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
     alert('Popup blocked. Please allow popups to download your PDF.');
     return;
   }
-
-  printWindow.document.write(`
-    <!DOCTYPE html><html><head><title>Footy Futures Bracket — ${escape(data.display_name)}</title>
-      <style>
-        body { font-family: Arial, sans-serif; color:#111827; padding:28px; line-height:1.45; }
-        .topbar { display:flex; justify-content:space-between; gap:20px; align-items:flex-start; border-bottom:3px solid #111827; padding-bottom:12px; margin-bottom:18px; }
-        h1 { margin:0; font-size:30px; text-transform:uppercase; } h2 { margin-top:24px; border-bottom:2px solid #cbd5e1; padding-bottom:6px; }
-        h3 { margin:18px 0 8px; text-transform:uppercase; font-size:15px; }
-        .meta { color:#475569; font-size:12px; } .champion { border:1px solid #cbd5e1; background:#f8fafc; padding:12px; margin:16px 0; font-size:16px; }
-        table { width:100%; border-collapse:collapse; margin:8px 0 16px; font-size:11px; page-break-inside:avoid; }
-        th,td { border:1px solid #cbd5e1; padding:6px; text-align:left; vertical-align:top; } th { background:#f1f5f9; }
-        .group-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; } button { padding:10px 14px; font-weight:700; cursor:pointer; }
-        @media print { button { display:none; } body { padding:12px; } }
-      </style>
-    </head><body>
-      <button onclick="window.print()">Save as PDF</button>
-      <div class="topbar"><div><h1>Footy Futures Bracket</h1><div class="meta">Player: ${escape(data.display_name)}<br>Submitted: ${escape(new Date(data.submitted_at || data.exported_at).toLocaleString())}</div></div><div class="meta">Proof of prediction</div></div>
-      <div class="champion"><strong>Predicted Champion:</strong> ${escape(champion)}<br><strong>Tiebreaker:</strong> ${escape(totalGoals)} total goals</div>
-      <h2>Group Standings</h2><div class="group-grid">${groupHtml}</div>
-      <h2>Knockout Path</h2>${koHtml}
-      <script>setTimeout(() => window.print(), 500);<\/script>
-    </body></html>
-  `);
+  printWindow.document.write(`<!DOCTYPE html><html><head><title>Footy Futures Bracket</title>
+    <style>body{font-family:Arial,sans-serif;color:#111827;padding:28px;line-height:1.45}.topbar{display:flex;justify-content:space-between;border-bottom:3px solid #111827;padding-bottom:12px;margin-bottom:18px}h1{margin:0;font-size:30px;text-transform:uppercase}h2{margin-top:24px;border-bottom:2px solid #cbd5e1;padding-bottom:6px}h3{margin:18px 0 8px;text-transform:uppercase;font-size:15px}.meta{color:#475569;font-size:12px}.champion{border:1px solid #cbd5e1;background:#f8fafc;padding:12px;margin:16px 0;font-size:16px}table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:11px;page-break-inside:avoid}th,td{border:1px solid #cbd5e1;padding:6px;text-align:left;vertical-align:top}th{background:#f1f5f9}.group-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}button{padding:10px 14px;font-weight:700;cursor:pointer}@media print{button{display:none}body{padding:12px}}</style>
+    </head><body><button onclick="window.print()">Save as PDF</button><div class="topbar"><div><h1>Footy Futures Bracket</h1><div class="meta">Player: ${escape(data.display_name)}<br>Submitted: ${escape(new Date(data.submitted_at || data.exported_at).toLocaleString())}</div></div><div class="meta">Proof of prediction</div></div><div class="champion"><strong>Predicted Champion:</strong> ${escape(champion)}<br><strong>Tiebreaker:</strong> ${escape(totalGoals)} total goals</div><h2>Group Standings</h2><div class="group-grid">${groupHtml}</div><h2>Knockout Path</h2>${koHtml}<script>setTimeout(()=>window.print(),500);<\/script></body></html>`);
   printWindow.document.close();
 }
 
@@ -1248,7 +1196,8 @@ async function submitBracket() {
       return;
     }
 
-    updateR32AutoPopulate();
+    // Do not call updateR32AutoPopulate() here: it rebuilds R32 and clears downstream knockout scores.
+    // R32 is already populated when the player completes group-stage predictions.
     updateKnockoutProgression();
 
     const validationError = validateBracketReady();
@@ -1293,6 +1242,7 @@ async function submitBracket() {
     alert('Unexpected error: ' + err.message);
   }
 }
+
 
 
 initEngine();
