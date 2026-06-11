@@ -1,0 +1,30 @@
+name: World Cup Fixture Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fixture-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch World Cup 2026 fixtures
+        run: |
+          curl --request GET \
+            --url "https://v3.football.api-sports.io/fixtures?league=1&season=2026" \
+            --header "x-apisports-key: ${{ secrets.API_FOOTBALL_KEY }}" \
+            --output fixtures.json
+
+          echo "Fixture count:"
+          jq '.response | length' fixtures.json
+
+          echo "First 20 fixtures:"
+          jq '.response[:20] | map({
+            fixture_id: .fixture.id,
+            date: .fixture.date,
+            status: .fixture.status.short,
+            home: .teams.home.name,
+            away: .teams.away.name,
+            home_goals: .goals.home,
+            away_goals: .goals.away
+          })' fixtures.json
