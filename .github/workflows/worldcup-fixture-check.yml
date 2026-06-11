@@ -8,23 +8,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test Zafronix raw endpoint
+      - name: Test Zafronix correct endpoints
         run: |
-          echo "Testing likely Zafronix endpoints..."
-
-          echo "===== /wc/matches ====="
+          echo "===== /tournaments ====="
           curl --request GET \
-            --url "https://api.zafronix.com/wc/matches" \
-            --header "Authorization: Bearer ${{ secrets.ZAFRONIX_API_KEY }}" \
-            --output zafronix-matches.json
+            --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments" \
+            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}" \
+            --output tournaments.json
 
-          cat zafronix-matches.json
+          cat tournaments.json
 
           echo ""
-          echo "===== /wc/tournaments ====="
+          echo "===== /tournaments/2026 ====="
           curl --request GET \
-            --url "https://api.zafronix.com/wc/tournaments" \
-            --header "Authorization: Bearer ${{ secrets.ZAFRONIX_API_KEY }}" \
-            --output zafronix-tournaments.json
+            --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments/2026" \
+            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}" \
+            --output wc2026.json
 
-          cat zafronix-tournaments.json
+          cat wc2026.json
