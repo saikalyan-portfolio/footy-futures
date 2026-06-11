@@ -1,1 +1,40 @@
-.github/workflows/zafronix-match-check.yml
+name: Zafronix Match Endpoint Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  endpoint-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test possible match endpoints
+        run: |
+          echo "===== 1 tournaments/2026/matches ====="
+          curl --request GET \
+            --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments/2026/matches" \
+            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
+
+          echo ""
+          echo "===== 2 matches ====="
+          curl --request GET \
+            --url "https://api.zafronix.com/fifa/worldcup/v1/matches" \
+            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
+
+          echo ""
+          echo "===== 3 matches year 2026 ====="
+          curl --request GET \
+            --url "https://api.zafronix.com/fifa/worldcup/v1/matches?year=2026" \
+            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
+
+          echo ""
+          echo "===== 4 tournaments/2026/fixtures ====="
+          curl --request GET \
+            --url "https://api.zafronix.com/fifa/worldcup/v1/tournaments/2026/fixtures" \
+            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
+
+          echo ""
+          echo "===== 5 fixtures year 2026 ====="
+          curl --request GET \
+            --url "https://api.zafronix.com/fifa/worldcup/v1/fixtures?year=2026" \
+            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}"
