@@ -1,19 +1,30 @@
-name: Football Data World Cup Check
+name: Zafronix World Cup API Check
 
 on:
   workflow_dispatch:
 
 jobs:
-  fixture-check:
+  zafronix-check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Fetch football-data.org World Cup matches
+      - name: Test Zafronix raw endpoint
         run: |
-          curl --request GET \
-            --url "https://api.football-data.org/v4/competitions/WC/matches" \
-            --header "X-Auth-Token: ${{ secrets.FOOTBALL_DATA_KEY }}" \
-            --output response.json
+          echo "Testing likely Zafronix endpoints..."
 
-          echo "===== RAW RESPONSE ====="
-          cat response.json
+          echo "===== /wc/matches ====="
+          curl --request GET \
+            --url "https://api.zafronix.com/wc/matches" \
+            --header "Authorization: Bearer ${{ secrets.ZAFRONIX_API_KEY }}" \
+            --output zafronix-matches.json
+
+          cat zafronix-matches.json
+
+          echo ""
+          echo "===== /wc/tournaments ====="
+          curl --request GET \
+            --url "https://api.zafronix.com/wc/tournaments" \
+            --header "Authorization: Bearer ${{ secrets.ZAFRONIX_API_KEY }}" \
+            --output zafronix-tournaments.json
+
+          cat zafronix-tournaments.json
