@@ -277,6 +277,73 @@
     vertical-align: top;
   }
 
+  .rank-badge {
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 240, 255, .3);
+    background: rgba(0, 240, 255, .08);
+    box-shadow: 0 0 18px rgba(0, 240, 255, .08);
+  }
+  .rank.top .rank-badge {
+    border-color: rgba(255, 209, 102, .65);
+    background: rgba(255, 209, 102, .12);
+    box-shadow: 0 0 22px rgba(255, 209, 102, .15);
+  }
+  .points-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .points-label {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+  }
+  .breakdown-preview {
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.35;
+    margin-top: 3px;
+  }
+  .zero-banner {
+    max-width: 1100px;
+    margin: 0 auto 18px;
+    padding: 0 24px;
+    display: none;
+  }
+  .zero-banner.show { display: block; }
+  .zero-card {
+    border: 1px solid rgba(57,255,20,.22);
+    background: rgba(57,255,20,.06);
+    color: var(--text-muted);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-weight: 700;
+  }
+  .zero-card strong { color: var(--accent-lime); }
+  .score-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .score-pill {
+    border: 1px solid rgba(0, 240, 255, .16);
+    background: rgba(0, 240, 255, .05);
+    border-radius: 999px;
+    padding: 6px 9px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .score-pill strong { color: var(--text-white); }
+
   @media(max-width: 860px) {
     .board-head { display: none; }
     .row {
@@ -345,7 +412,7 @@
 <section class="hero">
   <div class="hero-eyebrow">FIFA World Cup 2026</div>
   <h1 class="hero-title">Live <em>Leaderboard</em></h1>
-  <p class="hero-sub">Leaderboard updates after completed matches, not live during games. Check back after results are processed to see where your bracket stands.</p>
+  <p class="hero-sub">Updated after full-time results are processed. Track total points, score breakdowns, and predicted champions as the tournament unfolds.</p>
 </section>
 
 <div class="stats-grid">
@@ -368,8 +435,15 @@
 </div>
 
 <div class="toolbar">
-  <input class="search" id="search" placeholder="Search by display name, passphrase, or champion..." oninput="renderLeaderboard()">
+  <input class="search" id="search" placeholder="Search by display name or predicted champion..." oninput="renderLeaderboard()">
   <button class="btn" onclick="loadLeaderboard()">Refresh</button>
+</div>
+
+<div class="zero-banner" id="zero-banner">
+  <div class="zero-card">
+    <strong>Scores are at 0 before completed matches.</strong>
+    The leaderboard will update automatically after final results are synced and processed.
+  </div>
 </div>
 
 <div class="status" id="status">Loading leaderboard...</div>
@@ -464,7 +538,6 @@ function renderLeaderboard() {
   const filtered = entries.filter(row => {
     const haystack = [
       row.display_name,
-      row.passphrase_hash,
       getChampion(row),
       row.total_points
     ].join(' ').toLowerCase();
@@ -478,6 +551,10 @@ function renderLeaderboard() {
   const updatedEl = document.getElementById('stat-updated');
   if (updatedEl) updatedEl.innerText = latestScoredAt ? formatDate(latestScoredAt) : 'Not scored yet';
 
+  const zeroBanner = document.getElementById('zero-banner');
+  const allZero = entries.length > 0 && entries.every(e => Number(e.total_points || 0) === 0);
+  if (zeroBanner) zeroBanner.classList.toggle('show', allZero);
+
   if (!filtered.length) {
     body.innerHTML = '<div class="empty">No matching entries found.</div>';
     return;
@@ -486,17 +563,23 @@ function renderLeaderboard() {
   body.innerHTML = filtered.map((row, idx) => {
     const globalRank = entries.findIndex(e => e.id === row.id) + 1;
     const champion = getChampion(row);
-    const shortHash = row.passphrase_hash ? row.passphrase_hash.slice(0, 18) + (row.passphrase_hash.length > 18 ? '…' : '') : '—';
+    const b = normalizeBreakdown(row.score_breakdown);
     return `
       <div class="row">
-        <div class="rank ${globalRank === 1 ? 'top' : ''}">#${globalRank}</div>
+        <div class="rank ${globalRank === 1 ? 'top' : ''}"><span class="rank-badge">#${globalRank}</span></div>
         <div>
           <div class="name">${escapeHtml(row.display_name || 'Unnamed')}</div>
-          <div class="hash">${escapeHtml(shortHash)}</div>
+          <div class="hash">Submitted ${escapeHtml(formatDate(row.submitted_at))}</div>
         </div>
-        <div class="points">${row.total_points ?? 0}</div>
+        <div class="points-wrap">
+          <div class="points">${row.total_points ?? 0}</div>
+          <div class="points-label">points</div>
+          <div class="breakdown-preview">
+            M:${b.matchOutcome} · XS:${b.exactScore} · GP:${b.groupTable} · KO:${b.knockout} · ET:${b.etPens}
+          </div>
+        </div>
         <div class="champion">${escapeHtml(champion)}</div>
-        <div class="date">${escapeHtml(formatDate(row.submitted_at))}</div>
+        <div class="date">${escapeHtml(row.last_scored_at ? 'Scored ' + formatDate(row.last_scored_at) : formatDate(row.submitted_at))}</div>
         <button class="view-btn" onclick="openDrawer(${row.id})">View</button>
       </div>
     `;
@@ -547,32 +630,52 @@ function closeDrawer() {
 }
 
 
-function scoreBreakdownTable(b) {
-  if (!b || !Object.keys(b).length) return '<div class="empty">No score breakdown yet. Run the scoring engine first.</div>';
-  const labels = {
-    group_outcomes: 'Group outcomes',
-    group_exact_scores: 'Group exact scores',
-    group_table_positions: 'Group table positions',
-    knockout_progression: 'Knockout progression',
-    knockout_exact_scores: 'Knockout exact scores',
-    et_penalty_resolution: 'ET / penalty resolution',
-    total: 'Total'
+
+function normalizeBreakdown(b) {
+  const data = b || {};
+  return {
+    matchOutcome: Number(data.group_match_outcome ?? data.group_outcomes ?? 0),
+    exactScore: Number(data.group_exact_score ?? data.group_exact_scores ?? 0),
+    groupTable: Number(data.group_table_positions ?? 0),
+    knockout: Number(data.knockout_progression ?? 0),
+    etPens: Number(data.et_penalty_resolution ?? 0),
+    total: Number(data.total ?? 0)
   };
+}
+
+function scoreBreakdownTable(b) {
+  const s = normalizeBreakdown(b);
+  if (!b || !Object.keys(b).length) return '<div class="empty">No score breakdown yet. Scores will appear after the first completed result is processed.</div>';
+
+  const rows = [
+    ['Match outcomes', s.matchOutcome, 'Correct 90-minute result direction'],
+    ['Exact scores', s.exactScore, 'Correct scoreline'],
+    ['Group positions', s.groupTable, 'Correct 1st, 2nd, or 3rd place'],
+    ['Knockout progression', s.knockout, 'Correct advancing teams'],
+    ['ET / penalties', s.etPens, 'Correct resolution method'],
+    ['Total', s.total, 'Leaderboard points']
+  ];
+
   return `
-    <table class="mini-table">
-      <thead><tr><th>Category</th><th>Points</th></tr></thead>
+    <div class="score-pills">
+      ${rows.slice(0, 5).map(([label, value]) => `
+        <span class="score-pill">${escapeHtml(label)}: <strong>${escapeHtml(value)}</strong></span>
+      `).join('')}
+    </div>
+    <table class="mini-table" style="margin-top:12px;">
+      <thead><tr><th>Category</th><th>Points</th><th>What it means</th></tr></thead>
       <tbody>
-        ${Object.entries(labels).map(([key, label]) => `
+        ${rows.map(([label, value, note]) => `
           <tr>
             <td>${escapeHtml(label)}</td>
-            <td><strong>${escapeHtml(b[key] ?? 0)}</strong></td>
+            <td><strong>${escapeHtml(value)}</strong></td>
+            <td>${escapeHtml(note)}</td>
           </tr>
         `).join('')}
       </tbody>
     </table>
   `;
 }
-
 
 function stageBlock(title, matches) {
   if (!matches || !matches.length) return '';
