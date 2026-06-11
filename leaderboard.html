@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Footy Futures — Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg-dark: #070a13;
+    --card-glass: rgba(15, 23, 42, 0.68);
+    --card-header: rgba(18, 30, 48, 0.9);
+    --accent-cyan: #00f0ff;
+    --accent-lime: #39ff14;
+    --text-white: #ffffff;
+    --text-muted: #94a3b8;
+    --border-glass: rgba(0, 240, 255, 0.16);
+    --input-bg: rgba(0, 0, 0, 0.4);
+    --danger: #ff4757;
+    --gold: #ffd166;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg-dark);
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(0, 240, 255, 0.06) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(57, 255, 20, 0.04) 0%, transparent 40%);
+    background-attachment: fixed;
+    color: var(--text-white);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding-bottom: 80px;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border-glass);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    background: rgba(7, 10, 19, 0.9);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .logo { font-family: 'Anton', sans-serif; font-size: 28px; letter-spacing: 1.5px; color: var(--text-white); text-transform: uppercase; }
+  .logo span { color: var(--accent-lime); }
+  .nav-links { display: flex; gap: 16px; align-items: center; }
+  .nav-links a { color: var(--accent-cyan); text-decoration: none; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+  .pill { background: var(--accent-cyan); color: var(--bg-dark); font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 4px; text-transform: uppercase; }
+
+  .hero { text-align: center; padding: 60px 24px 28px; max-width: 920px; margin: 0 auto; }
+  .hero-eyebrow { font-size: 13px; font-weight: 800; letter-spacing: 4px; color: var(--accent-cyan); text-transform: uppercase; margin-bottom: 12px; }
+  .hero-title { font-family: 'Anton', sans-serif; font-size: clamp(44px, 8vw, 82px); line-height: 0.95; text-transform: uppercase; margin-bottom: 16px; }
+  .hero-title em { color: var(--accent-lime); font-style: normal; text-shadow: 0 0 20px rgba(57,255,20,.2); }
+  .hero-sub { color: var(--text-muted); font-size: 15px; max-width: 720px; margin: 0 auto; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 16px;
+    max-width: 1100px;
+    margin: 18px auto 28px;
+    padding: 0 24px;
+  }
+  .stat-card {
+    background: var(--card-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  }
+  .stat-label { color: var(--text-muted); text-transform: uppercase; font-weight: 800; font-size: 11px; letter-spacing: 1px; }
+  .stat-value { font-family: 'Anton', sans-serif; font-size: 36px; color: var(--accent-lime); margin-top: 6px; }
+
+  .toolbar {
+    max-width: 1100px;
+    margin: 0 auto 18px;
+    padding: 0 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .search {
+    flex: 1;
+    min-width: 240px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-glass);
+    color: var(--text-white);
+    border-radius: 8px;
+    padding: 13px 14px;
+    outline: none;
+    font-weight: 700;
+  }
+  .search:focus { border-color: var(--accent-lime); }
+  .btn {
+    background: transparent;
+    border: 1px solid var(--accent-cyan);
+    color: var(--accent-cyan);
+    border-radius: 8px;
+    padding: 13px 18px;
+    cursor: pointer;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .btn:hover { background: rgba(0,240,255,.1); }
+
+  .leaderboard-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .board {
+    background: var(--card-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  }
+  .board-head {
+    background: var(--card-header);
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: 70px 1.5fr 110px 1.2fr 180px 110px;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    border-bottom: 1px solid var(--border-glass);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 70px 1.5fr 110px 1.2fr 180px 110px;
+    gap: 12px;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .row:last-child { border-bottom: none; }
+  .rank {
+    font-family: 'Anton', sans-serif;
+    font-size: 26px;
+    color: var(--accent-cyan);
+  }
+  .rank.top { color: var(--gold); }
+  .name { font-weight: 900; color: var(--text-white); }
+  .hash { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+  .points {
+    font-family: 'Anton', sans-serif;
+    color: var(--accent-lime);
+    font-size: 24px;
+  }
+  .champion { font-weight: 800; }
+  .date { color: var(--text-muted); font-size: 12px; }
+  .view-btn {
+    background: rgba(57,255,20,.08);
+    color: var(--accent-lime);
+    border: 1px solid rgba(57,255,20,.3);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .view-btn:hover { background: rgba(57,255,20,.14); }
+
+  .status {
+    max-width: 1100px;
+    margin: 16px auto;
+    padding: 0 24px;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+  .empty {
+    padding: 28px 18px;
+    color: var(--text-muted);
+    text-align: center;
+    font-weight: 800;
+  }
+
+  .drawer {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.72);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 200;
+  }
+  .drawer.open { display: flex; }
+  .modal {
+    max-width: 920px;
+    width: 100%;
+    max-height: 86vh;
+    overflow: auto;
+    background: #09101d;
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    box-shadow: 0 20px 80px rgba(0,0,0,.6);
+  }
+  .modal-head {
+    position: sticky;
+    top: 0;
+    background: var(--card-header);
+    padding: 18px;
+    border-bottom: 1px solid var(--border-glass);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    z-index: 2;
+  }
+  .modal-title {
+    font-family: 'Anton', sans-serif;
+    font-size: 24px;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+  }
+  .close {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 900;
+  }
+  .modal-body { padding: 18px; }
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .detail-card {
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    padding: 14px;
+    background: rgba(255,255,255,.03);
+  }
+  .detail-card .label { color: var(--text-muted); font-size: 11px; font-weight: 900; text-transform: uppercase; }
+  .detail-card .value { color: var(--text-white); font-weight: 900; margin-top: 4px; }
+
+  .stage-title {
+    font-family: 'Anton', sans-serif;
+    color: var(--accent-lime);
+    margin: 22px 0 8px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  .mini-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .mini-table th {
+    color: var(--text-muted);
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    padding: 8px;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+  .mini-table td {
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    padding: 8px;
+    vertical-align: top;
+  }
+
+  @media(max-width: 860px) {
+    .board-head { display: none; }
+    .row {
+      grid-template-columns: 54px 1fr;
+      gap: 10px;
+      position: relative;
+    }
+    .points, .champion, .date, .view-btn {
+      grid-column: 2;
+    }
+    .view-btn { width: fit-content; }
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-links a {
+    border: 1px solid rgba(0, 240, 255, 0.32);
+    border-radius: 999px;
+    padding: 8px 13px;
+    background: rgba(0, 240, 255, 0.055);
+    color: var(--accent-cyan);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1;
+    transition: all 0.2s ease;
+  }
+  .nav-links a:hover {
+    background: rgba(0, 240, 255, 0.15);
+    border-color: var(--accent-cyan);
+    transform: translateY(-1px);
+  }
+  .nav-links a:nth-child(2) {
+    color: var(--accent-lime);
+    border-color: rgba(57, 255, 20, 0.35);
+    background: rgba(57, 255, 20, 0.055);
+  }
+  .nav-links a:nth-child(2):hover {
+    background: rgba(57, 255, 20, 0.13);
+    border-color: var(--accent-lime);
+  }
+  @media(max-width: 680px) {
+    header { height: auto; min-height: 64px; padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
+    .nav-links { width: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 2px; }
+    .nav-links a { white-space: nowrap; }
+  }
+
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Footy<span>Futures</span></div>
+  <nav class="nav-links">
+    <a href="./index.html">Predict</a>
+    <a href="./leaderboard.html">Leaderboard</a>
+    <a href="./index.html#rules">Rules</a>
+    <span class="pill">Leaderboard</span>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-eyebrow">FIFA World Cup 2026</div>
+  <h1 class="hero-title">Live <em>Leaderboard</em></h1>
+  <p class="hero-sub">Leaderboard updates after completed matches, not live during games. Check back after results are processed to see where your bracket stands.</p>
+</section>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Entries</div>
+    <div class="stat-value" id="stat-entries">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Current Leader</div>
+    <div class="stat-value" id="stat-leader" style="font-size:28px;">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Top Score</div>
+    <div class="stat-value" id="stat-score">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Last Updated</div>
+    <div class="stat-value" id="stat-updated" style="font-size:24px;">—</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input class="search" id="search" placeholder="Search by display name, passphrase, or champion..." oninput="renderLeaderboard()">
+  <button class="btn" onclick="loadLeaderboard()">Refresh</button>
+</div>
+
+<div class="status" id="status">Loading leaderboard...</div>
+
+<div class="leaderboard-wrap">
+  <div class="board">
+    <div class="board-head">
+      <div>Rank</div>
+      <div>Player</div>
+      <div>Points</div>
+      <div>Champion</div>
+      <div>Submitted</div>
+      <div>Details</div>
+    </div>
+    <div id="leaderboard-body"></div>
+  </div>
+</div>
+
+<div class="drawer" id="drawer" onclick="if(event.target.id==='drawer') closeDrawer()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Bracket Details</div>
+      <button class="close" onclick="closeDrawer()">Close</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://wwkmoonfbiogfzqioqgk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3a21vb25mYmlvZ2Z6cWlvcWdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwOTg2ODYsImV4cCI6MjA5NjY3NDY4Nn0.museSEVj3LbQuX3YRBsEq4ysWxhgZ1Y2xczJPaxx0Pc';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let entries = [];
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function getChampion(row) {
+  return row?.predictions?.champion?.name || 'Not resolved';
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+  try {
+    return new Date(value).toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return value;
+  }
+}
+
+async function loadLeaderboard() {
+  const status = document.getElementById('status');
+  const body = document.getElementById('leaderboard-body');
+  status.innerText = 'Loading leaderboard...';
+  body.innerHTML = '';
+
+  const { data, error } = await supabaseClient
+    .from('predictions')
+    .select('id, passphrase_hash, display_name, predictions, submitted_at, total_points, score_breakdown, last_scored_at')
+    .order('total_points', { ascending: false })
+    .order('submitted_at', { ascending: true });
+
+  if (error) {
+    console.error(error);
+    status.innerText = 'Could not load leaderboard: ' + error.message;
+    body.innerHTML = '<div class="empty">Leaderboard failed to load.</div>';
+    return;
+  }
+
+  entries = data || [];
+  status.innerText = entries.length ? 'Leaderboard loaded.' : 'No submissions yet.';
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const body = document.getElementById('leaderboard-body');
+  const term = document.getElementById('search').value.trim().toLowerCase();
+
+  const filtered = entries.filter(row => {
+    const haystack = [
+      row.display_name,
+      row.passphrase_hash,
+      getChampion(row),
+      row.total_points
+    ].join(' ').toLowerCase();
+    return haystack.includes(term);
+  });
+
+  document.getElementById('stat-entries').innerText = entries.length;
+  document.getElementById('stat-leader').innerText = entries[0]?.display_name || '—';
+  document.getElementById('stat-score').innerText = entries[0]?.total_points ?? 0;
+  const latestScoredAt = entries.map(e => e.last_scored_at).filter(Boolean).sort().pop();
+  const updatedEl = document.getElementById('stat-updated');
+  if (updatedEl) updatedEl.innerText = latestScoredAt ? formatDate(latestScoredAt) : 'Not scored yet';
+
+  if (!filtered.length) {
+    body.innerHTML = '<div class="empty">No matching entries found.</div>';
+    return;
+  }
+
+  body.innerHTML = filtered.map((row, idx) => {
+    const globalRank = entries.findIndex(e => e.id === row.id) + 1;
+    const champion = getChampion(row);
+    const shortHash = row.passphrase_hash ? row.passphrase_hash.slice(0, 18) + (row.passphrase_hash.length > 18 ? '…' : '') : '—';
+    return `
+      <div class="row">
+        <div class="rank ${globalRank === 1 ? 'top' : ''}">#${globalRank}</div>
+        <div>
+          <div class="name">${escapeHtml(row.display_name || 'Unnamed')}</div>
+          <div class="hash">${escapeHtml(shortHash)}</div>
+        </div>
+        <div class="points">${row.total_points ?? 0}</div>
+        <div class="champion">${escapeHtml(champion)}</div>
+        <div class="date">${escapeHtml(formatDate(row.submitted_at))}</div>
+        <button class="view-btn" onclick="openDrawer(${row.id})">View</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function openDrawer(id) {
+  const row = entries.find(e => e.id === id);
+  if (!row) return;
+
+  const p = row.predictions || {};
+  const champion = getChampion(row);
+  const final = p.knockouts?.final?.[0];
+  const bestThirds = p.best_third_place_teams || [];
+
+  document.getElementById('modal-title').innerText = row.display_name || 'Bracket Details';
+
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-card"><div class="label">Points</div><div class="value">${escapeHtml(row.total_points ?? 0)}</div></div>
+      <div class="detail-card"><div class="label">Predicted Champion</div><div class="value">${escapeHtml(champion)}</div></div>
+      <div class="detail-card"><div class="label">Submitted</div><div class="value">${escapeHtml(formatDate(row.submitted_at))}</div></div>
+      <div class="detail-card"><div class="label">Tiebreaker</div><div class="value">${escapeHtml(p.total_goals ? `${p.total_goals} total goals predicted` : '—')}</div></div>
+    </div>
+
+    <div class="stage-title">Score Breakdown</div>
+    ${scoreBreakdownTable(row.score_breakdown)}
+
+    <div class="stage-title">Final</div>
+    ${final ? knockoutTable([final]) : '<div class="empty">No final data saved.</div>'}
+
+    <div class="stage-title">Best Third-Place Qualifiers</div>
+    ${bestThirds.length ? thirdPlaceTable(bestThirds) : '<div class="empty">No third-place data saved.</div>'}
+
+    <div class="stage-title">Knockout Path</div>
+    ${stageBlock('Round of 32', p.knockouts?.r32)}
+    ${stageBlock('Round of 16', p.knockouts?.r16)}
+    ${stageBlock('Quarter-Finals', p.knockouts?.qf)}
+    ${stageBlock('Semi-Finals', p.knockouts?.sf)}
+  `;
+
+  document.getElementById('drawer').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+}
+
+
+function scoreBreakdownTable(b) {
+  if (!b || !Object.keys(b).length) return '<div class="empty">No score breakdown yet. Run the scoring engine first.</div>';
+  const labels = {
+    group_outcomes: 'Group outcomes',
+    group_exact_scores: 'Group exact scores',
+    group_table_positions: 'Group table positions',
+    knockout_progression: 'Knockout progression',
+    knockout_exact_scores: 'Knockout exact scores',
+    et_penalty_resolution: 'ET / penalty resolution',
+    total: 'Total'
+  };
+  return `
+    <table class="mini-table">
+      <thead><tr><th>Category</th><th>Points</th></tr></thead>
+      <tbody>
+        ${Object.entries(labels).map(([key, label]) => `
+          <tr>
+            <td>${escapeHtml(label)}</td>
+            <td><strong>${escapeHtml(b[key] ?? 0)}</strong></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+
+function stageBlock(title, matches) {
+  if (!matches || !matches.length) return '';
+  return `
+    <div class="stage-title" style="font-size:18px; margin-top:14px;">${escapeHtml(title)}</div>
+    ${knockoutTable(matches)}
+  `;
+}
+
+function knockoutTable(matches) {
+  return `
+    <table class="mini-table">
+      <thead>
+        <tr>
+          <th>Match</th>
+          <th>Teams</th>
+          <th>90'</th>
+          <th>AET</th>
+          <th>Pens</th>
+          <th>Winner</th>
+          <th>Method</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${matches.map(m => `
+          <tr>
+            <td>${escapeHtml(m.match || 1)}</td>
+            <td>${escapeHtml(m.team1 || '—')} vs ${escapeHtml(m.team2 || '—')}</td>
+            <td>${score(m.score1, m.score2)}</td>
+            <td>${score(m.afterExtraTime1, m.afterExtraTime2)}</td>
+            <td>${score(m.penalties1, m.penalties2)}</td>
+            <td><strong>${escapeHtml(m.winner || '—')}</strong></td>
+            <td>${escapeHtml((m.resolutionMethod || '—').replace('_', ' '))}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function thirdPlaceTable(rows) {
+  return `
+    <table class="mini-table">
+      <thead><tr><th>Group</th><th>Team</th><th>Pts</th><th>GD</th><th>GF</th></tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td>${escapeHtml(r.group)}</td>
+            <td><strong>${escapeHtml(r.name || r.team)}</strong></td>
+            <td>${escapeHtml(r.pts)}</td>
+            <td>${escapeHtml(r.gd)}</td>
+            <td>${escapeHtml(r.gf)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function score(a, b) {
+  if (a === undefined || b === undefined || a === '' || b === '') return '—';
+  return `${escapeHtml(a)}-${escapeHtml(b)}`;
+}
+
+loadLeaderboard();
+</script>
+</body>
+</html>
