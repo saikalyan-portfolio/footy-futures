@@ -618,8 +618,11 @@ function openDrawer(id) {
     <div class="stage-title">Score Breakdown</div>
     ${scoreBreakdownTable(row.score_breakdown)}
 
-    <div class="stage-title">Final</div>
-    ${final ? knockoutTable([final]) : '<div class="empty">No final data saved.</div>'}
+    <div class="stage-title">Group Stage Predictions</div>
+    ${groupStagePredictionsBlock(p.groups)}
+
+    <div class="stage-title">Predicted Group Tables</div>
+    ${groupTablesBlock(p.group_standings)}
 
     <div class="stage-title">Best Third-Place Qualifiers</div>
     ${bestThirds.length ? thirdPlaceTable(bestThirds) : '<div class="empty">No third-place data saved.</div>'}
@@ -629,6 +632,7 @@ function openDrawer(id) {
     ${stageBlock('Round of 16', p.knockouts?.r16)}
     ${stageBlock('Quarter-Finals', p.knockouts?.qf)}
     ${stageBlock('Semi-Finals', p.knockouts?.sf)}
+    ${stageBlock('Final', p.knockouts?.final)}
   `;
 
   document.getElementById('drawer').classList.add('open');
@@ -684,6 +688,100 @@ function scoreBreakdownTable(b) {
       </tbody>
     </table>
   `;
+}
+
+
+function groupStagePredictionsBlock(groups) {
+  if (!groups || !Object.keys(groups).length) {
+    return '<div class="empty">No group-stage prediction data saved.</div>';
+  }
+
+  const groupOrder = Object.keys(groups).sort();
+
+  return groupOrder.map(groupId => {
+    const matches = groups[groupId] || [];
+    if (!matches.length) return '';
+
+    return `
+      <div class="stage-title" style="font-size:18px; margin-top:14px;">Group ${escapeHtml(groupId)}</div>
+      <table class="mini-table">
+        <thead>
+          <tr>
+            <th>Match</th>
+            <th>Home</th>
+            <th>Prediction</th>
+            <th>Away</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${matches.map((m, idx) => {
+            const status = m.lockedAtSubmit ? 'Locked at submit' : 'Open at submit';
+            const statusColor = m.lockedAtSubmit ? '#ffb3bd' : 'var(--accent-lime)';
+            return `
+              <tr>
+                <td>${escapeHtml(idx + 1)}</td>
+                <td><strong>${escapeHtml(m.homeName || m.home || '—')}</strong></td>
+                <td><strong>${score(m.homeScore, m.awayScore)}</strong></td>
+                <td><strong>${escapeHtml(m.awayName || m.away || '—')}</strong></td>
+                <td style="color:${statusColor}; font-weight:900;">${escapeHtml(status)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }).join('');
+}
+
+function groupTablesBlock(groupStandings) {
+  if (!groupStandings || !Object.keys(groupStandings).length) {
+    return '<div class="empty">No predicted group table data saved.</div>';
+  }
+
+  const groupOrder = Object.keys(groupStandings).sort();
+
+  return groupOrder.map(groupId => {
+    const rows = groupStandings[groupId] || [];
+    if (!rows.length) return '';
+
+    return `
+      <div class="stage-title" style="font-size:18px; margin-top:14px;">Group ${escapeHtml(groupId)}</div>
+      <table class="mini-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Team</th>
+            <th>P</th>
+            <th>Pts</th>
+            <th>GD</th>
+            <th>GF</th>
+            <th>GA</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td><strong>${escapeHtml(r.rank ?? '—')}</strong></td>
+              <td><strong>${escapeHtml(r.name || r.team || '—')}</strong></td>
+              <td>${escapeHtml(r.p ?? '—')}</td>
+              <td><strong>${escapeHtml(r.pts ?? '—')}</strong></td>
+              <td>${escapeHtml(formatGoalDiff(r.gd))}</td>
+              <td>${escapeHtml(r.gf ?? '—')}</td>
+              <td>${escapeHtml(r.ga ?? '—')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }).join('');
+}
+
+function formatGoalDiff(value) {
+  if (value === undefined || value === null || value === '') return '—';
+  const n = Number(value);
+  if (Number.isNaN(n)) return value;
+  return n > 0 ? `+${n}` : String(n);
 }
 
 function stageBlock(title, matches) {
