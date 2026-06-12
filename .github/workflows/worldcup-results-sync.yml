@@ -1,4 +1,4 @@
-name: World Cup Results Sync
+name: World Cup Results Sync Live
 
 on:
   workflow_dispatch:
