@@ -3,7 +3,7 @@ name: World Cup Results Sync
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "17,47 * * * *"
 
 jobs:
   sync-results:
