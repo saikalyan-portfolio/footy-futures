@@ -318,15 +318,6 @@
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3T47ZXWCWK"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-3T47ZXWCWK');
-</script>
 </head>
 <body>
 
@@ -381,7 +372,7 @@
 <div class="section-divider" id="game"><div class="label">Group Stage <span>Fixtures</span></div><div class="line"></div></div>
 <div class="unified-grid" id="matches-matrix-grid"></div>
 
-<div class="section-divider"><div class="label">Live Group <span>Standings</span></div><div class="line"></div></div>
+<div class="section-divider"><div class="label">Predicted Group <span>Standings</span></div><div class="line"></div></div>
 <div class="unified-grid" id="tables-matrix-grid"></div>
 
 <div class="section-divider"><div class="label">Championship <span>Knockouts</span></div><div class="line"></div></div>
@@ -640,11 +631,11 @@ function isMatchLocked(matchId, referenceDate = new Date()) {
 
 function getScoreValueForCalculation(inputId) {
   const raw = document.getElementById(inputId)?.value;
-  if (raw !== undefined && raw !== '') return raw;
-  const matchId = inputId.replace(/_[ha]$/, '');
-  // For late entries, locked blank matches are treated as 0-0 only for table/R32 calculation.
-  // The submitted JSON still marks them lockedAtSubmit=true so the scorer can award 0 points.
-  return isMatchLocked(matchId) ? '0' : raw;
+
+  // Option A rule:
+  // Locked blank matches must stay blank for predicted standings/R32 generation.
+  // This prevents them from becoming artificial 0-0 draws and giving both teams 1 point.
+  return raw;
 }
 
 function applyMatchLocks() {
@@ -734,7 +725,7 @@ function initEngine() {
   Object.keys(TOURNAMENT_GROUPS).forEach(gid => {
     tableGrid.innerHTML += `
       <div class="dashboard-card">
-        <div class="card-title-bar"><h4>Group ${gid} Standings</h4></div>
+        <div class="card-title-bar"><h4>Group ${gid} Predicted Standings</h4></div>
         <div class="table-padding">
           <table class="matrix-table">
             <thead><tr><th>#</th><th style="text-align:left;">Nation</th><th>P</th><th>GD</th><th>Pts</th></tr></thead>
