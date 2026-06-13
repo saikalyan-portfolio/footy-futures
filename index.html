@@ -338,6 +338,88 @@
     background: rgba(255,255,255,0.12) !important;
     border-color: rgba(255,255,255,0.45) !important;
 }
+
+  /* ── Post-submit Support Modal ── */
+  .support-modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+    background: rgba(0, 0, 0, 0.74);
+    backdrop-filter: blur(10px);
+    z-index: 300;
+  }
+  .support-modal-overlay.open { display: flex; }
+  .support-modal {
+    width: 100%;
+    max-width: 520px;
+    background: rgba(9, 16, 29, 0.96);
+    border: 1px solid rgba(0, 240, 255, 0.22);
+    border-radius: 18px;
+    box-shadow: 0 24px 90px rgba(0, 0, 0, 0.62);
+    padding: 26px;
+    text-align: center;
+  }
+  .support-modal h3 {
+    font-family: 'Anton', sans-serif;
+    color: var(--accent-cyan);
+    font-size: 28px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .support-modal p {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 10px auto;
+    max-width: 440px;
+  }
+  .support-modal strong {
+    color: var(--accent-lime);
+    font-weight: 900;
+  }
+  .support-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 22px;
+  }
+  .support-modal-btn {
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--accent-cyan);
+    background: rgba(0, 240, 255, 0.08);
+    color: var(--accent-cyan);
+  }
+  .support-modal-btn:hover {
+    background: rgba(0, 240, 255, 0.16);
+    transform: translateY(-1px);
+  }
+  .support-modal-btn.primary {
+    background: var(--accent-lime);
+    border-color: var(--accent-lime);
+    color: var(--bg-dark);
+  }
+  .support-modal-btn.primary:hover {
+    background: #6bff4f;
+  }
+  @media(max-width: 520px) {
+    .support-modal { padding: 22px 18px; }
+    .support-modal-actions { flex-direction: column; }
+    .support-modal-btn { width: 100%; text-align: center; }
+  }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -471,7 +553,46 @@
   </div>
 </div>
 
+
+<div class="support-modal-overlay" id="post-submit-support-modal">
+  <div class="support-modal" role="dialog" aria-modal="true" aria-labelledby="support-modal-title">
+    <h3 id="support-modal-title">Enjoying Footy Futures? ❤️</h3>
+    <p>This project is independently built and maintained and will always remain <strong>FREE</strong> to play.</p>
+    <p>If you'd like to support the creator, you can contribute below. (Completely optional)</p>
+    <p>Thanks for being here! 🙂</p>
+    <div class="support-modal-actions">
+      <a class="support-modal-btn primary" href="https://paypal.me/madebysai" target="_blank" rel="noopener noreferrer">❤️ Support</a>
+      <button class="support-modal-btn" type="button" onclick="goToLeaderboard()">Go to Leaderboard</button>
+    </div>
+  </div>
+</div>
+
 <script>
+
+
+function showPostSubmitSupportModal() {
+  const modal = document.getElementById('post-submit-support-modal');
+  if (modal) modal.classList.add('open');
+}
+
+function closePostSubmitSupportModal() {
+  const modal = document.getElementById('post-submit-support-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function goToLeaderboard() {
+  window.location.href = './leaderboard.html';
+}
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closePostSubmitSupportModal();
+});
+
+document.addEventListener('click', (event) => {
+  const modal = document.getElementById('post-submit-support-modal');
+  if (modal && event.target === modal) closePostSubmitSupportModal();
+});
+
 
 // ── SUPABASE CONFIG ─────────────────────────────────────
 const SUPABASE_URL = 'https://wwkmoonfbiogfzqioqgk.supabase.co';
@@ -1613,7 +1734,7 @@ async function submitBracket() {
       lastSubmittedBracket = buildBracketExportObject();
       const downloadPanel = document.getElementById('download-after-submit');
       if (downloadPanel) downloadPanel.classList.add('active');
-      alert('Bracket saved successfully!');
+      showPostSubmitSupportModal();
     }
 
     btn.disabled = false;
