@@ -131,7 +131,7 @@
     background: var(--card-header);
     padding: 14px 18px;
     display: grid;
-    grid-template-columns: 70px 1.5fr 110px 1.2fr 180px 110px;
+    grid-template-columns: 70px 1.5fr 110px 1.2fr 110px;
     gap: 12px;
     color: var(--text-muted);
     font-size: 11px;
@@ -142,7 +142,7 @@
   }
   .row {
     display: grid;
-    grid-template-columns: 70px 1.5fr 110px 1.2fr 180px 110px;
+    grid-template-columns: 70px 1.5fr 110px 1.2fr 110px;
     gap: 12px;
     align-items: center;
     padding: 16px 18px;
@@ -464,7 +464,6 @@
       <div>Player</div>
       <div>Points</div>
       <div>Champion</div>
-      <div>Submitted</div>
       <div>Details</div>
     </div>
     <div id="leaderboard-body"></div>
@@ -588,7 +587,6 @@ function renderLeaderboard() {
           </div>
         </div>
         <div class="champion">${escapeHtml(champion)}</div>
-        <div class="date">${escapeHtml(row.last_scored_at ? 'Scored ' + formatDate(row.last_scored_at) : formatDate(row.submitted_at))}</div>
         <button class="view-btn" onclick="openDrawer(${row.id})">View</button>
       </div>
     `;
