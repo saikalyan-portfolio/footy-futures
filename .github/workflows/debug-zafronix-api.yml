@@ -1,19 +1,35 @@
-- name: Check old knockout ET match
-  run: |
-    curl --request GET \
-      --url "https://api.zafronix.com/fifa/worldcup/v1/matches?year=2022" \
-      --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}" \
-      --output wc2022.json
+name: Debug Zafronix API Shape
 
-    jq '.data[]
-      | select(.extraTime == true or .penalties != null)
-      | {
-          matchNo,
-          homeTeam,
-          awayTeam,
-          homeScore,
-          awayScore,
-          extraTime,
-          penalties,
-          goals
-        }' wc2022.json
+on:
+  workflow_dispatch:
+
+jobs:
+  debug-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check old knockout ET match
+        run: |
+          curl --request GET \
+            --url "https://api.zafronix.com/fifa/worldcup/v1/matches?year=2022" \
+            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}" \
+            --output wc2022.json
+
+          echo "ET / penalty matches:"
+          jq '.data[]
+            | select(.extraTime == true or .penalties != null)
+            | {
+                id,
+                matchNo,
+                stage,
+                stageNormalized,
+                homeTeam,
+                awayTeam,
+                homeScore,
+                awayScore,
+                result,
+                status,
+                extraTime,
+                penalties,
+                goals
+              }' wc2022.json
