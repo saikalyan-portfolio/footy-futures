@@ -344,6 +344,164 @@
   }
   .score-pill strong { color: var(--text-white); }
 
+
+  .support-card {
+    max-width: 1100px;
+    margin: 0 auto 18px;
+    padding: 0 24px;
+  }
+  .support-card-inner {
+    border: 1px solid rgba(57, 255, 20, 0.24);
+    background:
+      radial-gradient(circle at 12% 20%, rgba(57, 255, 20, 0.10), transparent 34%),
+      rgba(15, 23, 42, 0.72);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.34);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+  }
+  .support-title {
+    font-weight: 950;
+    color: var(--text-white);
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .support-copy {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.45;
+    max-width: 760px;
+  }
+  .support-copy strong { color: var(--accent-lime); }
+  .support-btn {
+    background: rgba(57,255,20,.10);
+    color: var(--accent-lime);
+    border: 1px solid rgba(57,255,20,.36);
+    border-radius: 999px;
+    padding: 11px 16px;
+    font-size: 11px;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .support-btn:hover { background: rgba(57,255,20,.16); }
+
+  .pagination {
+    max-width: 1100px;
+    margin: 0 auto 14px;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pagination-info {
+    color: var(--text-muted);
+    font-weight: 800;
+    font-size: 12px;
+  }
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-btn {
+    background: transparent;
+    border: 1px solid rgba(0, 240, 255, .32);
+    color: var(--accent-cyan);
+    border-radius: 999px;
+    padding: 9px 13px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .page-btn:hover:not(:disabled) { background: rgba(0,240,255,.10); }
+  .page-btn:disabled {
+    opacity: .38;
+    cursor: not-allowed;
+  }
+  .page-status {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+  }
+
+  .page-numbers {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .page-number-btn {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 240, 255, .24);
+    background: rgba(0, 240, 255, .04);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 950;
+  }
+  .page-number-btn:hover {
+    color: var(--accent-cyan);
+    border-color: rgba(0, 240, 255, .48);
+    background: rgba(0, 240, 255, .10);
+  }
+  .page-number-btn.active {
+    color: var(--bg-dark);
+    border-color: var(--accent-lime);
+    background: var(--accent-lime);
+    box-shadow: 0 0 18px rgba(57, 255, 20, .20);
+  }
+  .page-ellipsis {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 900;
+    padding: 0 2px;
+  }
+
+  .rank-badge.rank-gold {
+    width: 50px;
+    height: 50px;
+    color: #ffd166;
+    border-color: rgba(255, 209, 102, .85);
+    background: rgba(255, 209, 102, .14);
+    box-shadow: 0 0 24px rgba(255, 209, 102, .24);
+  }
+  .rank-badge.rank-silver {
+    width: 50px;
+    height: 50px;
+    color: #d7dde8;
+    border-color: rgba(215, 221, 232, .78);
+    background: rgba(215, 221, 232, .12);
+    box-shadow: 0 0 22px rgba(215, 221, 232, .18);
+  }
+  .rank-badge.rank-bronze {
+    width: 50px;
+    height: 50px;
+    color: #cd7f32;
+    border-color: rgba(205, 127, 50, .84);
+    background: rgba(205, 127, 50, .13);
+    box-shadow: 0 0 22px rgba(205, 127, 50, .20);
+  }
+
+
   @media(max-width: 860px) {
     .board-head { display: none; }
     .row {
@@ -396,6 +554,21 @@
     .nav-links a { white-space: nowrap; }
   }
 
+
+  @media(max-width: 720px) {
+    .support-card-inner {
+      align-items: stretch;
+      flex-direction: column;
+    }
+    .support-btn { text-align: center; }
+    .pagination {
+      align-items: stretch;
+      flex-direction: column;
+    }
+    .pagination-controls { justify-content: space-between; }
+  }
+
+
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-3T47ZXWCWK"></script>
@@ -444,7 +617,7 @@
 </div>
 
 <div class="toolbar">
-  <input class="search" id="search" placeholder="Search by display name or predicted champion..." oninput="renderLeaderboard()">
+  <input class="search" id="search" placeholder="Search by display name or predicted champion..." oninput="currentPage = 1; renderLeaderboard()">
   <button class="btn" onclick="loadLeaderboard()">Refresh</button>
 </div>
 
@@ -452,6 +625,29 @@
   <div class="zero-card">
     <strong>Scores are at 0 before completed matches.</strong>
     The leaderboard will update automatically after final results are synced and processed.
+  </div>
+</div>
+
+
+<div class="support-card">
+  <div class="support-card-inner">
+    <div>
+      <div class="support-title">Enjoying Footy Futures? ❤️</div>
+      <div class="support-copy">
+        This project is independently built, maintained and will always remain <strong>FREE</strong> to play.
+        If you'd like to support the project, you can choose to contribute by clicking the support button (completely optional). Thanks for being here! 🙂
+      </div>
+    </div>
+    <a class="support-btn" href="https://paypal.me/madebysai" target="_blank" rel="noopener noreferrer">❤️ Support</a>
+  </div>
+</div>
+
+<div class="pagination" id="pagination-top" style="display:none;">
+  <div class="pagination-info" id="pagination-info-top">Showing 0–0 of 0</div>
+  <div class="pagination-controls">
+    <button class="page-btn" id="prev-page-top" onclick="changePage(-1)">Previous</button>
+    <div class="page-numbers" id="page-numbers-top"></div>
+    <button class="page-btn" id="next-page-top" onclick="changePage(1)">Next</button>
   </div>
 </div>
 
@@ -468,6 +664,16 @@
     </div>
     <div id="leaderboard-body"></div>
   </div>
+
+  <div class="pagination" id="pagination-bottom" style="display:none; margin-top:14px; padding:0;">
+    <div class="pagination-info" id="pagination-info-bottom">Showing 0–0 of 0</div>
+    <div class="pagination-controls">
+      <button class="page-btn" id="prev-page-bottom" onclick="changePage(-1)">Previous</button>
+      <div class="page-numbers" id="page-numbers-bottom"></div>
+      <button class="page-btn" id="next-page-bottom" onclick="changePage(1)">Next</button>
+    </div>
+  </div>
+
 </div>
 
 <div class="drawer" id="drawer" onclick="if(event.target.id==='drawer') closeDrawer()">
@@ -486,6 +692,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let entries = [];
+const PAGE_SIZE = 25;
+let currentPage = 1;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -539,6 +747,76 @@ async function loadLeaderboard() {
   renderLeaderboard();
 }
 
+
+function getRankBadgeClass(rank) {
+  if (rank === 1) return 'rank-gold';
+  if (rank === 2) return 'rank-silver';
+  if (rank === 3) return 'rank-bronze';
+  return '';
+}
+
+function changePage(delta) {
+  goToPage(currentPage + delta);
+}
+
+function goToPage(page) {
+  currentPage = page;
+  renderLeaderboard();
+  document.querySelector('.leaderboard-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function paginationItems(totalPages) {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  const items = [1];
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPages - 1, currentPage + 1);
+
+  if (start > 2) items.push('ellipsis-left');
+  for (let p = start; p <= end; p++) items.push(p);
+  if (end < totalPages - 1) items.push('ellipsis-right');
+  items.push(totalPages);
+
+  return items;
+}
+
+function renderPageNumbers(pos, totalPages) {
+  const container = document.getElementById(`page-numbers-${pos}`);
+  if (!container) return;
+
+  container.innerHTML = paginationItems(totalPages).map(item => {
+    if (String(item).startsWith('ellipsis')) {
+      return '<span class="page-ellipsis">…</span>';
+    }
+    const page = Number(item);
+    const active = page === currentPage ? ' active' : '';
+    return `<button class="page-number-btn${active}" onclick="goToPage(${page})" aria-label="Go to page ${page}">${page}</button>`;
+  }).join('');
+}
+
+function updatePagination(totalFiltered) {
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+
+  const start = totalFiltered ? ((currentPage - 1) * PAGE_SIZE) + 1 : 0;
+  const end = Math.min(currentPage * PAGE_SIZE, totalFiltered);
+  const infoText = `Showing ${start}–${end} of ${totalFiltered}`;
+
+  ['top', 'bottom'].forEach(pos => {
+    const wrapper = document.getElementById(`pagination-${pos}`);
+    const info = document.getElementById(`pagination-info-${pos}`);
+    const prev = document.getElementById(`prev-page-${pos}`);
+    const next = document.getElementById(`next-page-${pos}`);
+
+    if (wrapper) wrapper.style.display = totalFiltered > PAGE_SIZE ? 'flex' : 'none';
+    if (info) info.innerText = infoText;
+    if (prev) prev.disabled = currentPage <= 1;
+    if (next) next.disabled = currentPage >= totalPages;
+    renderPageNumbers(pos, totalPages);
+  });
+}
+
+
 function renderLeaderboard() {
   const body = document.getElementById('leaderboard-body');
   const term = document.getElementById('search').value.trim().toLowerCase();
@@ -564,17 +842,23 @@ function renderLeaderboard() {
   if (zeroBanner) zeroBanner.classList.toggle('show', allZero);
 
   if (!filtered.length) {
+    updatePagination(0);
     body.innerHTML = '<div class="empty">No matching entries found.</div>';
     return;
   }
 
-  body.innerHTML = filtered.map((row, idx) => {
+  updatePagination(filtered.length);
+
+  const pageRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  body.innerHTML = pageRows.map((row) => {
     const globalRank = entries.findIndex(e => e.id === row.id) + 1;
     const champion = getChampion(row);
     const b = normalizeBreakdown(row.score_breakdown);
+    const rankClass = getRankBadgeClass(globalRank);
     return `
       <div class="row">
-        <div class="rank ${globalRank === 1 ? 'top' : ''}"><span class="rank-badge">#${globalRank}</span></div>
+        <div class="rank ${globalRank <= 3 ? 'top' : ''}"><span class="rank-badge ${rankClass}">#${globalRank}</span></div>
         <div>
           <div class="name">${escapeHtml(row.display_name || 'Unnamed')}</div>
           <div class="hash">Submitted ${escapeHtml(formatDate(row.submitted_at))}</div>
