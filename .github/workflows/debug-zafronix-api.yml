@@ -1,74 +1,19 @@
-name: Debug Zafronix API Shape
+- name: Check old knockout ET match
+  run: |
+    curl --request GET \
+      --url "https://api.zafronix.com/fifa/worldcup/v1/matches?year=2022" \
+      --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}" \
+      --output wc2022.json
 
-on:
-  workflow_dispatch:
-
-jobs:
-  debug-api:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Fetch Zafronix World Cup 2026 matches
-        run: |
-          curl --request GET \
-            --url "https://api.zafronix.com/fifa/worldcup/v1/matches?year=2026" \
-            --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}" \
-            --output matches.json
-
-          echo "Top-level API shape:"
-          jq 'keys' matches.json
-
-          echo "Match count:"
-          jq '.count' matches.json
-
-      - name: Print completed matches
-        run: |
-          echo "Completed matches:"
-          jq '.data[] 
-            | select(.homeScore != null and .awayScore != null)
-            | {
-                id,
-                matchNo,
-                stage,
-                stageNormalized,
-                homeTeam,
-                awayTeam,
-                homeScore,
-                awayScore,
-                result,
-                status,
-                extraTime,
-                penalties,
-                kickoffUtc,
-                date
-              }' matches.json
-
-      - name: Print knockout match API shape
-        run: |
-          echo "Knockout matches, matchNo >= 87:"
-          jq '.data[] 
-            | select((.matchNo | tonumber) >= 87)
-            | {
-                id,
-                matchNo,
-                stage,
-                stageNormalized,
-                homeTeam,
-                awayTeam,
-                homeScore,
-                awayScore,
-                result,
-                status,
-                extraTime,
-                penalties,
-                kickoffUtc,
-                date,
-                allKeys: keys
-              }' matches.json
-
-      - name: Print full first completed match raw object
-        run: |
-          echo "Full raw object for first completed match:"
-          jq '.data[] 
-            | select(.homeScore != null and .awayScore != null)
-            | . ' matches.json | head -n 120
+    jq '.data[]
+      | select(.extraTime == true or .penalties != null)
+      | {
+          matchNo,
+          homeTeam,
+          awayTeam,
+          homeScore,
+          awayScore,
+          extraTime,
+          penalties,
+          goals
+        }' wc2022.json
