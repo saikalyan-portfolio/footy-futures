@@ -782,8 +782,8 @@ async function loadActualResults() {
 
   const { data, error } = await supabaseClient
     .from('actual_results')
-    .select('match_id, home_score, away_score, completed, updated_at, last_synced_at')
-    .eq('completed', true);
+    .select('match_id, home_score, away_score, completed, api_status, updated_at, last_synced_at')
+.eq('completed', true);
 
   if (error) {
     console.error('Could not fetch actual results:', error);
@@ -793,6 +793,17 @@ async function loadActualResults() {
   MATCH_RESULTS = {};
 
   (data || []).forEach(row => {
+      if (!row.match_id) return;
+
+  const apiStatus = String(row.api_status || '').toLowerCase();
+
+  const isFinished = [
+    'finished',
+    'complete',
+    'completed',
+    'ft',
+    'full_time'
+  ].includes(apiStatus);
     if (!row.match_id) return;
     if (row.home_score === null || row.home_score === undefined) return;
     if (row.away_score === null || row.away_score === undefined) return;
