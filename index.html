@@ -420,6 +420,48 @@
     .support-modal-btn { width: 100%; text-align: center; }
   }
 
+  /* ── Featured On ── */
+  .featured-on {
+    max-width: 720px;
+    margin: 22px auto 6px;
+    padding: 0 24px;
+    text-align: center;
+  }
+  .featured-on-card {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    background: rgba(15, 23, 42, 0.74);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    padding: 16px 22px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+  }
+  .featured-on-title {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+  }
+  .featured-on-card a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .featured-on-card a:hover {
+    transform: translateY(-1px);
+    opacity: 0.92;
+  }
+  .featured-on-card img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -455,6 +497,16 @@
 <div class="entry-closed-banner" id="entry-closed-banner">
   <div class="inner">Entries are closed. Follow the leaderboard as the tournament unfolds.</div>
 </div>
+
+
+<section class="featured-on" aria-labelledby="featured-on-title">
+  <div class="featured-on-card">
+    <div class="featured-on-title" id="featured-on-title">Featured on</div>
+    <a href="https://launchpanda.dev/launches" target="_blank" rel="noopener">
+      <img src="https://launchpanda.dev/images/badges/launchpanda-badge.svg" alt="Launched on LaunchPanda" width="260" height="64" />
+    </a>
+  </div>
+</section>
 
 
 <div class="identity-container">
