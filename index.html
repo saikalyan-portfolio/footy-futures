@@ -420,46 +420,57 @@
     .support-modal-btn { width: 100%; text-align: center; }
   }
 
-  /* ── Featured On ── */
-  .featured-on {
-    max-width: 720px;
-    margin: 22px auto 6px;
+  /* ── Invite Strip ── */
+  .invite-strip-wrap {
+    max-width: 920px;
+    margin: 22px auto 10px;
     padding: 0 24px;
-    text-align: center;
   }
-  .featured-on-card {
-    display: inline-flex;
-    flex-direction: column;
+  .invite-strip {
+    display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
     background: rgba(15, 23, 42, 0.74);
     border: 1px solid var(--border-glass);
     border-radius: 12px;
-    padding: 16px 22px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.28);
   }
-  .featured-on-title {
+  .invite-text {
     color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.3;
+  }
+  .invite-text strong {
+    color: var(--accent-lime);
+  }
+  .invite-share-btn {
+    flex-shrink: 0;
+    background: rgba(57, 255, 20, 0.08);
+    border: 1px solid rgba(57, 255, 20, 0.35);
+    color: var(--accent-lime);
+    border-radius: 999px;
+    padding: 10px 16px;
     font-size: 11px;
     font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 1.4px;
+    letter-spacing: 0.8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
   }
-  .featured-on-card a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-  }
-  .featured-on-card a:hover {
+  .invite-share-btn:hover {
+    background: rgba(57, 255, 20, 0.15);
     transform: translateY(-1px);
-    opacity: 0.92;
   }
-  .featured-on-card img {
-    display: block;
-    max-width: 100%;
-    height: auto;
+  @media(max-width: 720px) {
+    .invite-strip {
+      flex-direction: column;
+      text-align: center;
+    }
+    .invite-share-btn {
+      width: 100%;
+    }
   }
 
 </style>
@@ -499,12 +510,14 @@
 </div>
 
 
-<section class="featured-on" aria-labelledby="featured-on-title">
-  <div class="featured-on-card">
-    <div class="featured-on-title" id="featured-on-title">Featured on</div>
-    <a href="https://launchpanda.dev/launches" target="_blank" rel="noopener">
-      <img src="https://launchpanda.dev/images/badges/launchpanda-badge.svg" alt="Launched on LaunchPanda" width="260" height="64" />
-    </a>
+<section class="invite-strip-wrap">
+  <div class="invite-strip">
+    <span class="invite-text">
+      <strong>185+ Players Already ⚽</strong> Join the competition or challenge a friend.
+    </span>
+    <button class="invite-share-btn" onclick="copyShareLink()">
+      Copy Link to Share
+    </button>
   </div>
 </section>
 
@@ -1131,6 +1144,28 @@ const WORD_VAULT = ['striker', 'neon', 'pitch', 'volley', 'winger', 'header', 'g
 function generatePassphrase() {
   const grab = () => WORD_VAULT[Math.floor(Math.random() * WORD_VAULT.length)];
   document.getElementById('passphrase').value = `${grab()}-${grab()}-${grab()}`;
+}
+
+function copyShareLink() {
+  const shareText = "Think you can predict the 2026 World Cup better than me? Join Footy Futures ⚽ https://saikalyan-portfolio.github.io/footy-futures/";
+
+  const markCopied = () => {
+    const btn = document.querySelector('.invite-share-btn');
+    if (!btn) return;
+    const oldText = btn.innerText;
+    btn.innerText = "Copied ✓";
+    setTimeout(() => {
+      btn.innerText = oldText;
+    }, 2000);
+  };
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(shareText).then(markCopied).catch(() => {
+      prompt("Copy this link:", shareText);
+    });
+  } else {
+    prompt("Copy this link:", shareText);
+  }
 }
 
 
