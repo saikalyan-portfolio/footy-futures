@@ -2,8 +2,9 @@ name: World Cup Results Sync Live
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17,47 * * * *"
+  # Keep the schedule commented until one manual run succeeds cleanly.
+  # schedule:
+  #   - cron: "17,47 * * * *"
 
 jobs:
   sync-results:
@@ -12,7 +13,7 @@ jobs:
     steps:
       - name: Fetch Zafronix World Cup 2026 results
         run: |
-          curl --request GET \
+          curl --fail --request GET \
             --url "https://api.zafronix.com/fifa/worldcup/v1/matches?year=2026" \
             --header "X-API-Key: ${{ secrets.ZAFRONIX_API_KEY }}" \
             --output matches.json
@@ -31,6 +32,10 @@ jobs:
           const SUPABASE_URL = process.env.SUPABASE_URL;
           const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+          if (!SUPABASE_URL || !SERVICE_KEY) {
+            throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+          }
+
           const raw = JSON.parse(fs.readFileSync("matches.json", "utf8"));
           const matches = raw.data || [];
 
@@ -43,6 +48,7 @@ jobs:
             "Czech Republic": "cz",
             "Canada": "ca",
             "Bosnia and Herzegovina": "ba",
+            "Bosnia-Herzegovina": "ba",
             "Bosnia": "ba",
             "Qatar": "qa",
             "Switzerland": "ch",
@@ -57,6 +63,7 @@ jobs:
             "Türkiye": "tr",
             "Turkey": "tr",
             "Côte d'Ivoire": "ci",
+            "Cote d'Ivoire": "ci",
             "Ivory Coast": "ci",
             "Ecuador": "ec",
             "Germany": "de",
@@ -75,6 +82,7 @@ jobs:
             "Uruguay": "uy",
             "Spain": "es",
             "Cabo Verde": "cv",
+            "Cape Verde": "cv",
             "France": "fr",
             "Senegal": "sn",
             "Iraq": "iq",
@@ -95,77 +103,22 @@ jobs:
           };
 
           function normTeam(name) {
-            return TEAM_CODE_MAP[name] || "";
+            return TEAM_CODE_MAP[String(name || "").trim()] || "";
           }
 
-          function stageFromApi(stage) {
-            const s = String(stage || "").toLowerCase();
-
-            if (s === "group_a") return "group_A";
-            if (s === "group_b") return "group_B";
-            if (s === "group_c") return "group_C";
-            if (s === "group_d") return "group_D";
-            if (s === "group_e") return "group_E";
-            if (s === "group_f") return "group_F";
-            if (s === "group_g") return "group_G";
-            if (s === "group_h") return "group_H";
-            if (s === "group_i") return "group_I";
-            if (s === "group_j") return "group_J";
-            if (s === "group_k") return "group_K";
-            if (s === "group_l") return "group_L";
-
-            if (s.includes("round_of_32") || s === "r32") return "r32";
-            if (s.includes("round_of_16") || s === "r16") return "r16";
-            if (s.includes("quarter") || s === "qf") return "qf";
-            if (s.includes("semi") || s === "sf") return "sf";
-            if (s === "final") return "final";
-
-            return s;
+          function isFinished(status) {
+            return ["finished", "complete", "completed", "ft", "full_time"].includes(
+              String(status || "").toLowerCase()
+            );
           }
 
-          function internalMatchId(match) {
-            const no = Number(match.matchNo);
-            const stage = stageFromApi(match.stageNormalized || match.stage);
-
-            // Group stage mapping from FIFA match number to your internal gX_mY ids.
-            const groupMap = {
-              1: "gA_m0", 2: "gA_m1", 28: "gA_m2", 46: "gA_m3", 61: "gA_m4", 62: "gA_m5",
-              3: "gB_m0", 8: "gB_m1", 32: "gB_m2", 48: "gB_m3", 67: "gB_m4", 68: "gB_m5",
-              5: "gC_m0", 7: "gC_m1", 30: "gC_m2", 45: "gC_m3", 63: "gC_m4", 64: "gC_m5",
-              4: "gD_m0", 6: "gD_m1", 33: "gD_m2", 47: "gD_m3", 69: "gD_m4", 70: "gD_m5",
-              9: "gE_m0", 10: "gE_m1", 34: "gE_m2", 49: "gE_m3", 71: "gE_m4", 72: "gE_m5",
-              11: "gF_m0", 12: "gF_m1", 35: "gF_m2", 50: "gF_m3", 73: "gF_m4", 74: "gF_m5",
-              15: "gG_m0", 16: "gG_m1", 36: "gG_m2", 51: "gG_m3", 75: "gG_m4", 76: "gG_m5",
-              13: "gH_m0", 14: "gH_m1", 37: "gH_m2", 52: "gH_m3", 77: "gH_m4", 78: "gH_m5",
-              17: "gI_m0", 18: "gI_m1", 38: "gI_m2", 53: "gI_m3", 79: "gI_m4", 80: "gI_m5",
-              19: "gJ_m0", 20: "gJ_m1", 39: "gJ_m2", 54: "gJ_m3", 81: "gJ_m4", 82: "gJ_m5",
-              21: "gK_m0", 22: "gK_m1", 40: "gK_m2", 55: "gK_m3", 83: "gK_m4", 84: "gK_m5",
-              23: "gL_m0", 24: "gL_m1", 41: "gL_m2", 56: "gL_m3", 85: "gL_m4", 86: "gL_m5"
-            };
-
-            if (groupMap[no]) return groupMap[no];
-
-            // Knockout match numbers are expected to be 87 onward.
-            if (no >= 87 && no <= 102) return `r32_m${no - 86}`;
-            if (no >= 103 && no <= 110) return `r16_m${no - 102}`;
-            if (no >= 111 && no <= 114) return `qf_m${no - 110}`;
-            if (no >= 115 && no <= 116) return `sf_m${no - 114}`;
-            if (no === 118 || stage === "final") return "final_m1";
-
-            return null;
-          }
-
-          function winner(match, homeCode, awayCode) {
-            if (match.homeScore === null || match.awayScore === null) return { code: null, name: null };
-            if (match.homeScore > match.awayScore) return { code: homeCode, name: match.homeTeam };
-            if (match.awayScore > match.homeScore) return { code: awayCode, name: match.awayTeam };
-
-            if (match.penalties && match.penalties.home !== null && match.penalties.away !== null) {
-              if (match.penalties.home > match.penalties.away) return { code: homeCode, name: match.homeTeam };
-              if (match.penalties.away > match.penalties.home) return { code: awayCode, name: match.awayTeam };
+          function scoreValue(value, label, fixture) {
+            if (value === null || value === undefined || value === "") return null;
+            const n = Number(value);
+            if (!Number.isInteger(n) || n < 0) {
+              throw new Error(`Invalid ${label} for ${fixture.match_id}: ${value}`);
             }
-
-            return { code: null, name: null };
+            return n;
           }
 
           async function supabase(path, options = {}) {
@@ -205,64 +158,109 @@ jobs:
             return text;
           }
 
+          const fixtureRows = await supabase(
+            "fixture_map?select=match_id,stage,group_id,match_no,api_fixture_id,home_code,away_code,home_name,away_name&api_fixture_id=not.is.null"
+          );
+
+          const fixtureByApiId = new Map();
+          for (const fixture of fixtureRows || []) {
+            fixtureByApiId.set(String(fixture.api_fixture_id), fixture);
+          }
+
+          console.log(`Loaded fixture_map rows: ${fixtureByApiId.size}`);
+
           const rows = [];
+          const skipped = [];
 
           for (const match of matches) {
             const status = String(match.status || "").toLowerCase();
 
-            const isFinished = [
-              "finished",
-              "complete",
-              "completed",
-              "ft",
-              "full_time"
-            ].includes(status);
-
-            if (!isFinished) {
-              console.log("Skipping unfinished/live match:", match.matchNo, match.id, status || "unknown", match.homeTeam, match.awayTeam, match.homeScore, match.awayScore);
+            if (!isFinished(status)) {
+              skipped.push(`unfinished ${match.matchNo} ${match.id} ${status || "unknown"} ${match.homeTeam} vs ${match.awayTeam}`);
               continue;
             }
 
-            if (match.homeScore === null || match.awayScore === null) continue;
+            const apiFixtureId = String(match.id || match.fixture_id || "");
+            const fixture = fixtureByApiId.get(apiFixtureId);
 
-            const match_id = internalMatchId(match);
-            if (!match_id) {
-              console.log("Skipping unmapped match:", match.matchNo, match.id, match.stage, match.homeTeam, match.awayTeam);
-              continue;
+            if (!fixture) {
+              throw new Error(
+                `Finished API fixture has no fixture_map row. ` +
+                `api_fixture_id=${apiFixtureId}, matchNo=${match.matchNo}, ` +
+                `${match.homeTeam} vs ${match.awayTeam}, status=${status}`
+              );
             }
 
             const homeCode = normTeam(match.homeTeam);
             const awayCode = normTeam(match.awayTeam);
-            const win = winner(match, homeCode, awayCode);
+
+            if (!homeCode || !awayCode) {
+              throw new Error(
+                `Could not normalize team code for API ${apiFixtureId}: ${match.homeTeam} vs ${match.awayTeam}`
+              );
+            }
+
+            if (homeCode !== fixture.home_code || awayCode !== fixture.away_code) {
+              throw new Error(
+                `Fixture mismatch for API ${apiFixtureId}. ` +
+                `API says ${match.homeTeam}(${homeCode}) vs ${match.awayTeam}(${awayCode}); ` +
+                `fixture_map says ${fixture.home_name}(${fixture.home_code}) vs ${fixture.away_name}(${fixture.away_code}) ` +
+                `for ${fixture.match_id}`
+              );
+            }
+
+            const homeScore = scoreValue(match.homeScore, "homeScore", fixture);
+            const awayScore = scoreValue(match.awayScore, "awayScore", fixture);
+            if (homeScore === null || awayScore === null) {
+              throw new Error(`Finished fixture ${fixture.match_id} has null score from API ${apiFixtureId}`);
+            }
+
+            const penaltiesHome = scoreValue(match.penalties?.home, "penalties.home", fixture);
+            const penaltiesAway = scoreValue(match.penalties?.away, "penalties.away", fixture);
+            const hasPens = penaltiesHome !== null && penaltiesAway !== null;
+
+            let winnerCode = null;
+            let winnerName = null;
+            if (homeScore > awayScore) {
+              winnerCode = fixture.home_code;
+              winnerName = fixture.home_name;
+            } else if (awayScore > homeScore) {
+              winnerCode = fixture.away_code;
+              winnerName = fixture.away_name;
+            } else if (hasPens && penaltiesHome !== penaltiesAway) {
+              winnerCode = penaltiesHome > penaltiesAway ? fixture.home_code : fixture.away_code;
+              winnerName = penaltiesHome > penaltiesAway ? fixture.home_name : fixture.away_name;
+            }
 
             rows.push({
-              match_id,
-              stage: stageFromApi(match.stageNormalized || match.stage),
-              match_no: Number(match.matchNo),
-              home_code: homeCode,
-              home_name: match.homeTeam,
-              away_code: awayCode,
-              away_name: match.awayTeam,
-              home_score: match.homeScore,
-              away_score: match.awayScore,
+              match_id: fixture.match_id,
+              stage: fixture.stage,
+              match_no: Number(fixture.match_no),
+              home_code: fixture.home_code,
+              home_name: fixture.home_name,
+              away_code: fixture.away_code,
+              away_name: fixture.away_name,
+              home_score: homeScore,
+              away_score: awayScore,
               after_extra_time_home: null,
               after_extra_time_away: null,
-              penalties_home: match.penalties?.home ?? null,
-              penalties_away: match.penalties?.away ?? null,
-              winner_code: win.code,
-              winner_name: win.name,
-              resolution_method: match.penalties ? "penalties" : (match.extraTime ? "extra_time" : "regular_time"),
+              penalties_home: penaltiesHome,
+              penalties_away: penaltiesAway,
+              winner_code: winnerCode,
+              winner_name: winnerName,
+              resolution_method: hasPens ? "penalties" : (match.extraTime ? "extra_time" : "regular_time"),
               completed: true,
               played_at: match.kickoffUtc || match.date || new Date().toISOString(),
               updated_at: new Date().toISOString(),
               api_provider: "zafronix",
-              api_fixture_id: match.id,
+              api_fixture_id: apiFixtureId,
               api_status: status,
               last_synced_at: new Date().toISOString()
             });
           }
 
-          console.log(`Completed matches found: ${rows.length}`);
+          console.log(`Completed mapped matches found: ${rows.length}`);
+          console.log(`Skipped unfinished/non-final matches: ${skipped.length}`);
 
           if (rows.length > 0) {
             await supabase("actual_results?on_conflict=match_id", {
@@ -272,6 +270,12 @@ jobs:
             console.log(`Upserted ${rows.length} completed results.`);
           } else {
             console.log("No completed matches to sync yet.");
+          }
+
+          const validation = await supabase("actual_results_validation_errors?select=*");
+          if (validation && validation.length > 0) {
+            console.error("actual_results validation errors:", JSON.stringify(validation, null, 2));
+            throw new Error(`Validation failed: ${validation.length} actual_results mapping error(s)`);
           }
 
           const recalculated = await rpc("admin_recalculate_all_scores");
