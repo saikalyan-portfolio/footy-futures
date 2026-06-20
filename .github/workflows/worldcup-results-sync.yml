@@ -2,7 +2,7 @@ name: World Cup Results Sync Live
 
 on:
   workflow_dispatch:
-  # Keep the schedule commented until one manual run succeeds cleanly.
+  # Keep GitHub schedule commented out. Your third-party cron should trigger workflow_dispatch.
   # schedule:
   #   - cron: "17,47 * * * *"
 
@@ -20,6 +20,8 @@ jobs:
 
           echo "Fetched matches:"
           jq '.count' matches.json
+          echo "Completed matches from API:"
+          jq -r '.data[] | select((.status|ascii_downcase) as $s | ["finished","complete","completed","ft","full_time"] | index($s)) | "\(.id) | matchNo=\(.matchNo) | \(.homeTeam) \(.homeScore)-\(.awayScore) \(.awayTeam) | status=\(.status)"' matches.json
 
       - name: Sync completed results to Supabase and recalculate leaderboard
         env:
@@ -159,17 +161,22 @@ jobs:
           }
 
           const fixtureRows = await supabase(
-            "fixture_map?select=match_id,stage,group_id,match_no,api_fixture_id,home_code,away_code,home_name,away_name&api_fixture_id=not.is.null"
+            "fixture_map?select=match_id,stage,group_id,match_no,api_fixture_id,home_code,away_code,home_name,away_name"
           );
 
-          const fixtureByApiId = new Map();
+          const fixtureByTeamPair = new Map();
           for (const fixture of fixtureRows || []) {
-            fixtureByApiId.set(String(fixture.api_fixture_id), fixture);
+            const key = `${fixture.home_code}|${fixture.away_code}`;
+            if (fixtureByTeamPair.has(key)) {
+              throw new Error(`Duplicate fixture_map team pair: ${key}`);
+            }
+            fixtureByTeamPair.set(key, fixture);
           }
 
-          console.log(`Loaded fixture_map rows: ${fixtureByApiId.size}`);
+          console.log(`Loaded fixture_map rows: ${fixtureRows.length}`);
 
           const rows = [];
+          const fixtureApiUpdates = [];
           const skipped = [];
 
           for (const match of matches) {
@@ -181,18 +188,12 @@ jobs:
             }
 
             const apiFixtureId = String(match.id || match.fixture_id || "");
-            const fixture = fixtureByApiId.get(apiFixtureId);
-
-            if (!fixture) {
-              throw new Error(
-                `Finished API fixture has no fixture_map row. ` +
-                `api_fixture_id=${apiFixtureId}, matchNo=${match.matchNo}, ` +
-                `${match.homeTeam} vs ${match.awayTeam}, status=${status}`
-              );
-            }
-
             const homeCode = normTeam(match.homeTeam);
             const awayCode = normTeam(match.awayTeam);
+
+            if (!apiFixtureId) {
+              throw new Error(`Finished fixture has no API id: ${match.homeTeam} vs ${match.awayTeam}`);
+            }
 
             if (!homeCode || !awayCode) {
               throw new Error(
@@ -200,12 +201,14 @@ jobs:
               );
             }
 
-            if (homeCode !== fixture.home_code || awayCode !== fixture.away_code) {
+            const pairKey = `${homeCode}|${awayCode}`;
+            const fixture = fixtureByTeamPair.get(pairKey);
+
+            if (!fixture) {
               throw new Error(
-                `Fixture mismatch for API ${apiFixtureId}. ` +
-                `API says ${match.homeTeam}(${homeCode}) vs ${match.awayTeam}(${awayCode}); ` +
-                `fixture_map says ${fixture.home_name}(${fixture.home_code}) vs ${fixture.away_name}(${fixture.away_code}) ` +
-                `for ${fixture.match_id}`
+                `Finished API fixture has no fixture_map team-pair row. ` +
+                `api_fixture_id=${apiFixtureId}, matchNo=${match.matchNo}, ` +
+                `${match.homeTeam}(${homeCode}) vs ${match.awayTeam}(${awayCode}), status=${status}`
               );
             }
 
@@ -231,6 +234,8 @@ jobs:
               winnerCode = penaltiesHome > penaltiesAway ? fixture.home_code : fixture.away_code;
               winnerName = penaltiesHome > penaltiesAway ? fixture.home_name : fixture.away_name;
             }
+
+            fixtureApiUpdates.push({ match_id: fixture.match_id, api_fixture_id: apiFixtureId });
 
             rows.push({
               match_id: fixture.match_id,
@@ -261,6 +266,15 @@ jobs:
 
           console.log(`Completed mapped matches found: ${rows.length}`);
           console.log(`Skipped unfinished/non-final matches: ${skipped.length}`);
+
+          for (const update of fixtureApiUpdates) {
+            await supabase(`fixture_map?match_id=eq.${encodeURIComponent(update.match_id)}`, {
+              method: "PATCH",
+              headers: { "Prefer": "return=minimal" },
+              body: JSON.stringify({ api_fixture_id: update.api_fixture_id })
+            });
+          }
+          console.log(`Updated fixture_map API ids for ${fixtureApiUpdates.length} completed fixtures.`);
 
           if (rows.length > 0) {
             await supabase("actual_results?on_conflict=match_id", {
