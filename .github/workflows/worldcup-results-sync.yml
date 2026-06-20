@@ -2,7 +2,8 @@ name: World Cup Results Sync Live
 
 on:
   workflow_dispatch:
-  # Keep GitHub schedule commented out. Your third-party cron should trigger workflow_dispatch.
+  # Third-party cron should trigger workflow_dispatch.
+  # Keep GitHub's own schedule commented out.
   # schedule:
   #   - cron: "17,47 * * * *"
 
@@ -19,9 +20,16 @@ jobs:
             --output matches.json
 
           echo "Fetched matches:"
-          jq '.count' matches.json
+          jq '.count // (.data | length)' matches.json
+
           echo "Completed matches from API:"
-          jq -r '.data[] | select((.status|ascii_downcase) as $s | ["finished","complete","completed","ft","full_time"] | index($s)) | "\(.id) | matchNo=\(.matchNo) | \(.homeTeam) \(.homeScore)-\(.awayScore) \(.awayTeam) | status=\(.status)"' matches.json
+          # Debug only. Do not let jq diagnostics fail the workflow.
+          jq -r '
+            (.data // [])[]
+            | select(((.status // "") | tostring | ascii_downcase) as $s
+                | ["finished", "complete", "completed", "ft", "full_time"] | index($s))
+            | "\((.id // "") | tostring) | matchNo=\((.matchNo // "") | tostring) | \((.homeTeam // "") | tostring) \((.homeScore // "") | tostring)-\((.awayScore // "") | tostring) \((.awayTeam // "") | tostring) | status=\((.status // "") | tostring)"
+          ' matches.json || true
 
       - name: Sync completed results to Supabase and recalculate leaderboard
         env:
@@ -35,7 +43,7 @@ jobs:
           const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
           if (!SUPABASE_URL || !SERVICE_KEY) {
-            throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+            throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY secret.");
           }
 
           const raw = JSON.parse(fs.readFileSync("matches.json", "utf8"));
@@ -50,7 +58,6 @@ jobs:
             "Czech Republic": "cz",
             "Canada": "ca",
             "Bosnia and Herzegovina": "ba",
-            "Bosnia-Herzegovina": "ba",
             "Bosnia": "ba",
             "Qatar": "qa",
             "Switzerland": "ch",
@@ -96,6 +103,7 @@ jobs:
             "Portugal": "pt",
             "DR Congo": "cd",
             "Congo DR": "cd",
+            "Democratic Republic of the Congo": "cd",
             "Uzbekistan": "uz",
             "Colombia": "co",
             "Ghana": "gh",
@@ -114,13 +122,18 @@ jobs:
             );
           }
 
-          function scoreValue(value, label, fixture) {
-            if (value === null || value === undefined || value === "") return null;
-            const n = Number(value);
-            if (!Number.isInteger(n) || n < 0) {
-              throw new Error(`Invalid ${label} for ${fixture.match_id}: ${value}`);
+          function winner(match, homeCode, awayCode) {
+            if (match.homeScore === null || match.homeScore === undefined) return { code: null, name: null };
+            if (match.awayScore === null || match.awayScore === undefined) return { code: null, name: null };
+            if (Number(match.homeScore) > Number(match.awayScore)) return { code: homeCode, name: match.homeTeam };
+            if (Number(match.awayScore) > Number(match.homeScore)) return { code: awayCode, name: match.awayTeam };
+
+            if (match.penalties && match.penalties.home !== null && match.penalties.home !== undefined && match.penalties.away !== null && match.penalties.away !== undefined) {
+              if (Number(match.penalties.home) > Number(match.penalties.away)) return { code: homeCode, name: match.homeTeam };
+              if (Number(match.penalties.away) > Number(match.penalties.home)) return { code: awayCode, name: match.awayTeam };
             }
-            return n;
+
+            return { code: null, name: null };
           }
 
           async function supabase(path, options = {}) {
@@ -161,19 +174,20 @@ jobs:
           }
 
           const fixtureRows = await supabase(
-            "fixture_map?select=match_id,stage,group_id,match_no,api_fixture_id,home_code,away_code,home_name,away_name"
+            "fixture_map?select=match_id,stage,group_id,match_no,home_code,away_code,home_name,away_name,api_fixture_id"
           );
+
+          console.log(`Loaded fixture_map rows: ${fixtureRows.length}`);
 
           const fixtureByTeamPair = new Map();
           for (const fixture of fixtureRows || []) {
+            if (!fixture.home_code || !fixture.away_code) continue;
             const key = `${fixture.home_code}|${fixture.away_code}`;
             if (fixtureByTeamPair.has(key)) {
-              throw new Error(`Duplicate fixture_map team pair: ${key}`);
+              throw new Error(`Duplicate fixture_map team pair found: ${key}`);
             }
             fixtureByTeamPair.set(key, fixture);
           }
-
-          console.log(`Loaded fixture_map rows: ${fixtureRows.length}`);
 
           const rows = [];
           const fixtureApiUpdates = [];
@@ -183,89 +197,77 @@ jobs:
             const status = String(match.status || "").toLowerCase();
 
             if (!isFinished(status)) {
-              skipped.push(`unfinished ${match.matchNo} ${match.id} ${status || "unknown"} ${match.homeTeam} vs ${match.awayTeam}`);
               continue;
             }
 
-            const apiFixtureId = String(match.id || match.fixture_id || "");
+            if (match.homeScore === null || match.homeScore === undefined) continue;
+            if (match.awayScore === null || match.awayScore === undefined) continue;
+
             const homeCode = normTeam(match.homeTeam);
             const awayCode = normTeam(match.awayTeam);
-
-            if (!apiFixtureId) {
-              throw new Error(`Finished fixture has no API id: ${match.homeTeam} vs ${match.awayTeam}`);
-            }
+            const apiFixtureId = String(match.id || "").trim();
 
             if (!homeCode || !awayCode) {
-              throw new Error(
-                `Could not normalize team code for API ${apiFixtureId}: ${match.homeTeam} vs ${match.awayTeam}`
-              );
+              skipped.push(`Unknown team code for API ${apiFixtureId}: ${match.homeTeam} vs ${match.awayTeam}`);
+              continue;
             }
 
             const pairKey = `${homeCode}|${awayCode}`;
             const fixture = fixtureByTeamPair.get(pairKey);
 
             if (!fixture) {
-              throw new Error(
-                `Finished API fixture has no fixture_map team-pair row. ` +
-                `api_fixture_id=${apiFixtureId}, matchNo=${match.matchNo}, ` +
-                `${match.homeTeam}(${homeCode}) vs ${match.awayTeam}(${awayCode}), status=${status}`
-              );
+              skipped.push(`No fixture_map row for API ${apiFixtureId}: ${match.homeTeam}(${homeCode}) vs ${match.awayTeam}(${awayCode}), matchNo=${match.matchNo}`);
+              continue;
             }
 
-            const homeScore = scoreValue(match.homeScore, "homeScore", fixture);
-            const awayScore = scoreValue(match.awayScore, "awayScore", fixture);
-            if (homeScore === null || awayScore === null) {
-              throw new Error(`Finished fixture ${fixture.match_id} has null score from API ${apiFixtureId}`);
+            const homeScore = Number(match.homeScore);
+            const awayScore = Number(match.awayScore);
+
+            if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
+              throw new Error(`Invalid score for API ${apiFixtureId}: ${match.homeScore}-${match.awayScore}`);
             }
 
-            const penaltiesHome = scoreValue(match.penalties?.home, "penalties.home", fixture);
-            const penaltiesAway = scoreValue(match.penalties?.away, "penalties.away", fixture);
-            const hasPens = penaltiesHome !== null && penaltiesAway !== null;
-
-            let winnerCode = null;
-            let winnerName = null;
-            if (homeScore > awayScore) {
-              winnerCode = fixture.home_code;
-              winnerName = fixture.home_name;
-            } else if (awayScore > homeScore) {
-              winnerCode = fixture.away_code;
-              winnerName = fixture.away_name;
-            } else if (hasPens && penaltiesHome !== penaltiesAway) {
-              winnerCode = penaltiesHome > penaltiesAway ? fixture.home_code : fixture.away_code;
-              winnerName = penaltiesHome > penaltiesAway ? fixture.home_name : fixture.away_name;
-            }
-
-            fixtureApiUpdates.push({ match_id: fixture.match_id, api_fixture_id: apiFixtureId });
+            const win = winner(match, homeCode, awayCode);
+            const resolutionMethod = match.penalties ? "penalties" : (match.extraTime ? "extra_time" : "regular_time");
+            const nowIso = new Date().toISOString();
 
             rows.push({
               match_id: fixture.match_id,
-              stage: fixture.stage,
+              stage: fixture.stage || "group",
               match_no: Number(fixture.match_no),
-              home_code: fixture.home_code,
-              home_name: fixture.home_name,
-              away_code: fixture.away_code,
-              away_name: fixture.away_name,
+              home_code: homeCode,
+              home_name: match.homeTeam,
+              away_code: awayCode,
+              away_name: match.awayTeam,
               home_score: homeScore,
               away_score: awayScore,
               after_extra_time_home: null,
               after_extra_time_away: null,
-              penalties_home: penaltiesHome,
-              penalties_away: penaltiesAway,
-              winner_code: winnerCode,
-              winner_name: winnerName,
-              resolution_method: hasPens ? "penalties" : (match.extraTime ? "extra_time" : "regular_time"),
+              penalties_home: match.penalties?.home ?? null,
+              penalties_away: match.penalties?.away ?? null,
+              winner_code: win.code,
+              winner_name: win.name,
+              resolution_method: resolutionMethod,
               completed: true,
-              played_at: match.kickoffUtc || match.date || new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+              played_at: match.kickoffUtc || match.date || nowIso,
+              updated_at: nowIso,
               api_provider: "zafronix",
               api_fixture_id: apiFixtureId,
               api_status: status,
-              last_synced_at: new Date().toISOString()
+              last_synced_at: nowIso
+            });
+
+            fixtureApiUpdates.push({
+              match_id: fixture.match_id,
+              api_fixture_id: apiFixtureId
             });
           }
 
-          console.log(`Completed mapped matches found: ${rows.length}`);
-          console.log(`Skipped unfinished/non-final matches: ${skipped.length}`);
+          console.log(`Completed matches mapped for upsert: ${rows.length}`);
+          if (skipped.length) {
+            console.log("Skipped finished matches:");
+            for (const item of skipped) console.log(`- ${item}`);
+          }
 
           for (const update of fixtureApiUpdates) {
             await supabase(`fixture_map?match_id=eq.${encodeURIComponent(update.match_id)}`, {
@@ -274,7 +276,6 @@ jobs:
               body: JSON.stringify({ api_fixture_id: update.api_fixture_id })
             });
           }
-          console.log(`Updated fixture_map API ids for ${fixtureApiUpdates.length} completed fixtures.`);
 
           if (rows.length > 0) {
             await supabase("actual_results?on_conflict=match_id", {
@@ -286,11 +287,12 @@ jobs:
             console.log("No completed matches to sync yet.");
           }
 
-          const validation = await supabase("actual_results_validation_errors?select=*");
-          if (validation && validation.length > 0) {
-            console.error("actual_results validation errors:", JSON.stringify(validation, null, 2));
-            throw new Error(`Validation failed: ${validation.length} actual_results mapping error(s)`);
+          const validationErrors = await supabase("actual_results_validation_errors?select=*");
+          if (validationErrors.length > 0) {
+            console.error("Validation errors after sync:", JSON.stringify(validationErrors, null, 2));
+            throw new Error(`actual_results validation failed with ${validationErrors.length} row(s).`);
           }
+          console.log("Validation clean: 0 actual_results_validation_errors rows.");
 
           const recalculated = await rpc("admin_recalculate_all_scores");
           console.log("Recalculate result:", recalculated);
