@@ -155,7 +155,33 @@
     color: var(--accent-cyan);
   }
   .rank.top { color: var(--gold); }
-  .name { font-weight: 900; color: var(--text-white); }
+  .name { font-weight: 900; color: var(--text-white); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .entry-badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(57,255,20,.38);
+    background: rgba(57,255,20,.08);
+    color: var(--accent-lime);
+    border-radius: 999px;
+    padding: 3px 7px;
+    font-size: 9px;
+    font-weight: 950;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .entry-badge.full { color: var(--accent-cyan); border-color: rgba(0,240,255,.28); background: rgba(0,240,255,.06); }
+  .late-entry-note {
+    border: 1px solid rgba(57,255,20,.22);
+    background: rgba(57,255,20,.06);
+    color: var(--text-muted);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-weight: 750;
+    line-height: 1.45;
+    margin-bottom: 14px;
+  }
+  .late-entry-note strong { color: var(--accent-lime); }
   .hash { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
   .points {
     font-family: 'Anton', sans-serif;
@@ -648,7 +674,7 @@
 <section class="hero">
   <div class="hero-eyebrow">FIFA World Cup 2026</div>
   <h1 class="hero-title">Live <em>Leaderboard</em></h1>
-  <p class="hero-sub">Updated after full-time results are processed. Track total points, score breakdowns, and predicted champions as the tournament unfolds.</p>
+  <p class="hero-sub">Updated after full-time results are processed. Full entries and R32 late entries are ranked together; late entries naturally score 0 for group-stage categories.</p>
 </section>
 
 <div class="stats-grid">
@@ -799,6 +825,33 @@ function getChampion(row) {
   return row?.predictions?.champion?.name || 'Not resolved';
 }
 
+function hasAnyGroupPrediction(row) {
+  const groups = row?.predictions?.groups;
+  if (!groups || !Object.keys(groups).length) return false;
+
+  return Object.values(groups).some(matches =>
+    Array.isArray(matches) && matches.some(m =>
+      m && m.homeScore !== undefined && m.awayScore !== undefined &&
+      String(m.homeScore ?? '').trim() !== '' && String(m.awayScore ?? '').trim() !== ''
+    )
+  );
+}
+
+function isR32LateEntry(row) {
+  const r32 = row?.predictions?.knockouts?.r32;
+  return Array.isArray(r32) && r32.length > 0 && !hasAnyGroupPrediction(row);
+}
+
+function entryBadge(row) {
+  if (isR32LateEntry(row)) return '<span class="entry-badge">R32 Entry</span>';
+  return '<span class="entry-badge full">Full Entry</span>';
+}
+
+function lateEntryNotice(row) {
+  if (!isR32LateEntry(row)) return '';
+  return '<div class="late-entry-note"><strong>R32 Late Entry.</strong> This bracket was submitted from Round of 32 onwards. Group-stage match, exact-score, and group-table points remain 0 by design.</div>';
+}
+
 function formatDate(value) {
   if (!value) return '—';
   try {
@@ -823,7 +876,7 @@ async function loadLeaderboard() {
   const { data, error } = await supabaseClient
     .from('predictions')
     .select('id, passphrase_hash, display_name, predictions, submitted_at, total_points, score_breakdown, last_scored_at')
-    .order('total_points', { ascending: false })
+    .order('total_points', { ascending: false, nullsFirst: false })
     .order('submitted_at', { ascending: true });
 
   if (error) {
@@ -916,6 +969,7 @@ function renderLeaderboard() {
     const haystack = [
       row.display_name,
       getChampion(row),
+      isR32LateEntry(row) ? 'r32 late entry knockout only' : 'full entry',
       row.total_points
     ].join(' ').toLowerCase();
     return haystack.includes(term);
@@ -951,11 +1005,11 @@ function renderLeaderboard() {
       <div class="row">
         <div class="rank ${globalRank <= 3 ? 'top' : ''}"><span class="rank-badge ${rankClass}">#${globalRank}</span></div>
         <div>
-          <div class="name">${escapeHtml(row.display_name || 'Unnamed')}</div>
+          <div class="name">${escapeHtml(row.display_name || 'Unnamed')} ${entryBadge(row)}</div>
           <div class="hash">Submitted ${escapeHtml(formatDate(row.submitted_at))}</div>
         </div>
         <div class="points-wrap">
-          <div class="points">${row.total_points ?? 0}</div>
+          <div class="points">${Number(row.total_points ?? 0)}</div>
           <div class="points-label">points</div>
           <div class="breakdown-preview">
             M:${b.matchOutcome} · XS:${b.exactScore} · GP:${b.groupTable} · KO:${b.knockout} · ET:${b.etPens}
@@ -988,17 +1042,21 @@ function openDrawer(id) {
       <div class="detail-card"><div class="label">Tiebreaker</div><div class="value">${escapeHtml(p.total_goals ? `${p.total_goals} total goals predicted` : '—')}</div></div>
     </div>
 
+    ${lateEntryNotice(row)}
+
     <div class="stage-title">Score Breakdown</div>
     ${scoreBreakdownTable(row.score_breakdown)}
 
-    <div class="stage-title">Group Stage Predictions</div>
-    ${groupStagePredictionsBlock(p.groups)}
+    ${isR32LateEntry(row) ? '' : `
+      <div class="stage-title">Group Stage Predictions</div>
+      ${groupStagePredictionsBlock(p.groups)}
 
-    <div class="stage-title">Predicted Group Tables</div>
-    ${groupTablesBlock(p.group_standings)}
+      <div class="stage-title">Predicted Group Tables</div>
+      ${groupTablesBlock(p.group_standings)}
 
-    <div class="stage-title">Best Third-Place Qualifiers</div>
-    ${bestThirds.length ? thirdPlaceTable(bestThirds) : '<div class="empty">No third-place data saved.</div>'}
+      <div class="stage-title">Best Third-Place Qualifiers</div>
+      ${bestThirds.length ? thirdPlaceTable(bestThirds) : '<div class="empty">No third-place data saved.</div>'}
+    `}
 
     <div class="stage-title">Knockout Path</div>
     ${stageBlock('Round of 32', p.knockouts?.r32)}
