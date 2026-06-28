@@ -492,9 +492,8 @@
   <div class="hero-eyebrow">FIFA World Cup 2026</div>
   <h1 class="hero-title">Predict the <em>Winner</em></h1>
   <p class="hero-sub" id="entry-deadline-note">
-    Submit before the tournament begins to maximise your scoring potential.
-    Entries remain open until kickoff of the final Matchday 1 fixture.
-    Any matches already started will be locked and score 0 points.
+    Late entries are open for Round of 32 onwards. Group-stage points are locked at 0 for new entries.
+    Submit before South Africa vs Canada kicks off at 12:30 AM IST.
   </p>
 </section>
 
@@ -506,7 +505,7 @@
 </div>
 
 <div class="entry-closed-banner" id="entry-closed-banner">
-  <div class="inner">Entries are closed. Follow the leaderboard as the tournament unfolds.</div>
+  <div class="inner">R32 late entries are closed. Follow the leaderboard as the knockouts unfold.</div>
 </div>
 
 
@@ -538,13 +537,13 @@
   </div>
 </div>
 
-<div class="section-divider" id="game"><div class="label">Group Stage <span>Fixtures</span></div><div class="line"></div></div>
-<div class="unified-grid" id="matches-matrix-grid"></div>
+<div class="section-divider" id="game" data-late-hide="true"><div class="label">Group Stage <span>Fixtures</span></div><div class="line"></div></div>
+<div class="unified-grid" id="matches-matrix-grid" data-late-hide="true"></div>
 
-<div class="section-divider"><div class="label">Predicted Group <span>Standings</span></div><div class="line"></div></div>
-<div class="unified-grid" id="tables-matrix-grid"></div>
+<div class="section-divider" data-late-hide="true"><div class="label">Predicted Group <span>Standings</span></div><div class="line"></div></div>
+<div class="unified-grid" id="tables-matrix-grid" data-late-hide="true"></div>
 
-<div class="section-divider"><div class="label">Championship <span>Knockouts</span></div><div class="line"></div></div>
+<div class="section-divider"><div class="label">Round of 32 <span>Late Entry</span></div><div class="line"></div></div>
 <div class="unified-grid" id="knockouts-matrix-grid"></div>
 
 <div class="section-divider"><div class="label"><span>Tiebreaker</span></div><div class="line"></div></div>
@@ -580,17 +579,17 @@
 <div class="section-divider" id="rules"><div class="label">Game <span>Rules</span></div><div class="line"></div></div>
 <div class="howto-grid">
   <div class="howto-card">
-    <h3>Predict Groups</h3>
+    <h3>Late Entry Rules</h3>
     <ul>
-      <li>Enter every group-stage score.</li>
-      <li>Tables update automatically using points, goal difference, and goals scored.</li>
-      <li>The top two from each group plus the eight best third-placed teams qualify.</li>
+      <li>New entries start from the Round of 32.</li>
+      <li>Group-stage match and table points are locked at 0 for late entries.</li>
+      <li>Entries close before South Africa vs Canada kicks off.</li>
     </ul>
   </div>
   <div class="howto-card">
     <h3>Build Knockouts</h3>
     <ul>
-      <li>Round of 32 slots auto-populate from your group predictions.</li>
+      <li>Round of 32 slots are already loaded with the resolved knockout fixtures.</li>
       <li>From R32 onward, enter 90-minute scores.</li>
       <li>If tied, enter after-extra-time. If still tied, enter penalties.</li>
     </ul>
@@ -669,7 +668,8 @@ if (window.supabase) {
 }
 
 
-const ENTRY_DEADLINE = new Date('2026-06-18T01:00:00Z');
+const R32_LATE_ENTRY_MODE = true;
+const ENTRY_DEADLINE = new Date('2026-06-28T19:00:00Z'); // 12:30 AM IST, June 29 — South Africa vs Canada kickoff
 
 function isEntryClosed() { return new Date() >= ENTRY_DEADLINE; }
 function formatCountdown(ms) {
@@ -691,15 +691,16 @@ function updateEntryCountdown() {
   if (!countdown) return;
   if (remaining <= 0) {
     countdown.innerText = 'Closed';
-    if (label) label.innerText = 'Entries closed';
-    if (note) note.innerText = 'No new brackets can be submitted. Follow the leaderboard as the tournament unfolds.';
+    if (label) label.innerText = 'R32 entries closed';
+    if (note) note.innerText = 'R32 late entries are now closed. Follow the leaderboard as the knockouts unfold.';
     if (banner) banner.style.display = 'block';
     if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Entries Closed'; submitBtn.style.opacity = '0.55'; submitBtn.style.cursor = 'not-allowed'; }
   } else {
     countdown.innerText = formatCountdown(remaining);
-    if (label) label.innerText = 'Entries close in';
+    if (label) label.innerText = 'R32 entries close in';
+    if (note) note.innerText = 'Late entries are open for Round of 32 onwards. Group-stage points are locked at 0 for new entries. Entries close before South Africa vs Canada kicks off at 12:30 AM IST.';
     if (banner) banner.style.display = 'none';
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Submit Bracket'; submitBtn.style.opacity = '1'; submitBtn.style.cursor = 'pointer'; }
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Submit R32 Bracket'; submitBtn.style.opacity = '1'; submitBtn.style.cursor = 'pointer'; }
   }
 }
 function downloadBracketPreview() {
@@ -958,22 +959,22 @@ function applyMatchLocks() {
 setInterval(applyMatchLocks, 30000);
 
 const R32_MATCHUPS = [
-  ['Runner-up A', 'Runner-up B'],
-  ['Winner E', '3rd A/B/C/D/F'],
-  ['Winner F', 'Runner-up C'],
-  ['Winner C', 'Runner-up F'],
-  ['Winner I', '3rd C/D/F/G/H'],
-  ['Runner-up E', 'Runner-up I'],
-  ['Winner A', '3rd C/E/F/H/I'],
-  ['Winner L', '3rd E/H/I/J/K'],
-  ['Winner D', '3rd B/E/F/I/J'],
-  ['Winner G', '3rd A/E/H/I/J'],
-  ['Runner-up K', 'Runner-up L'],
-  ['Winner H', 'Runner-up J'],
-  ['Winner B', '3rd E/F/G/I/J'],
-  ['Winner J', 'Runner-up H'],
-  ['Winner K', '3rd D/E/I/J/L'],
-  ['Runner-up D', 'Runner-up G']
+  ['za', 'ca'],      // South Africa vs Canada
+  ['br', 'jp'],      // Brazil vs Japan
+  ['de', 'py'],      // Germany vs Paraguay
+  ['nl', 'ma'],      // Netherlands vs Morocco
+  ['ci', 'no'],      // Ivory Coast vs Norway
+  ['fr', 'se'],      // France vs Sweden
+  ['mx', 'ec'],      // Mexico vs Ecuador
+  ['gb-eng', 'cd'],  // England vs DR Congo
+  ['be', 'sn'],      // Belgium vs Senegal
+  ['us', 'ba'],      // USA vs Bosnia
+  ['es', 'at'],      // Spain vs Austria
+  ['ch', 'dz'],      // Switzerland vs Algeria
+  ['ar', 'cv'],      // Argentina vs Cabo Verde
+  ['pt', 'hr'],      // Portugal vs Croatia
+  ['co', 'gh'],      // Colombia vs Ghana
+  ['au', 'eg']       // Australia vs Egypt
 ];
 
 
@@ -987,6 +988,27 @@ const R32_THIRD_PLACE_SLOTS = {
   13: ['E','F','G','I','J'],
   15: ['D','E','I','J','L']
 };
+
+function teamLabel(codeOrName) {
+  return TEAM_DATA[codeOrName] || codeOrName || '';
+}
+
+function populateResolvedR32Bracket() {
+  R32_MATCHUPS.forEach((matchup, idx) => {
+    const matchNo = idx + 1;
+    setTeamInput(`r32_m${matchNo}_t1`, matchup[0]);
+    setTeamInput(`r32_m${matchNo}_t2`, matchup[1]);
+  });
+}
+
+function applyLateEntryModeUi() {
+  if (!R32_LATE_ENTRY_MODE) return;
+  document.querySelectorAll('[data-late-hide="true"]').forEach(el => {
+    el.style.display = 'none';
+  });
+  const gameAnchor = document.getElementById('game');
+  if (gameAnchor) gameAnchor.id = '';
+}
 
 const KNOCKOUT_METADATA = [
   { id: 'r32', title: 'Round of 32', loops: 16 },
@@ -1047,8 +1069,8 @@ function initEngine() {
       let p1 = 'Team A';
       let p2 = 'Team B';
       if (stage.id === 'r32') {
-        p1 = R32_MATCHUPS[i][0];
-        p2 = R32_MATCHUPS[i][1];
+        p1 = teamLabel(R32_MATCHUPS[i][0]);
+        p2 = teamLabel(R32_MATCHUPS[i][1]);
       }
 
       koHTML += `
@@ -1087,6 +1109,8 @@ function initEngine() {
   });
 
   clearAllKnockoutInputs();
+  if (R32_LATE_ENTRY_MODE) populateResolvedR32Bracket();
+  applyLateEntryModeUi();
   applyMatchLocks();
 }
 
@@ -1341,6 +1365,12 @@ function resolveThirdPlaceSlots(bestThirds) {
 function updateR32AutoPopulate() {
   if (!document.getElementById('r32_m1_t1')) return;
 
+  if (R32_LATE_ENTRY_MODE) {
+    populateResolvedR32Bracket();
+    updateKnockoutProgression();
+    return;
+  }
+
   // Important: R32 must remain empty until the player completes all group-stage predictions.
   // Otherwise blank group scores can accidentally behave like 0-0 draws and create fake qualifiers.
   if (!areAllGroupsComplete()) {
@@ -1511,17 +1541,19 @@ function updateKnockoutProgression() {
 }
 
 function validateBracketReady() {
-  const missingGroupScores = [];
-  Object.keys(TOURNAMENT_GROUPS).forEach(gid => {
-    TOURNAMENT_GROUPS[gid].forEach((m, idx) => {
-      const matchId = `g${gid}_m${idx}`;
-      if (isMatchLocked(matchId)) return;
-      const h = document.getElementById(`${matchId}_h`)?.value;
-      const a = document.getElementById(`${matchId}_a`)?.value;
-      if (h === '' || a === '') missingGroupScores.push(`Group ${gid} Match ${idx + 1}`);
+  if (!R32_LATE_ENTRY_MODE) {
+    const missingGroupScores = [];
+    Object.keys(TOURNAMENT_GROUPS).forEach(gid => {
+      TOURNAMENT_GROUPS[gid].forEach((m, idx) => {
+        const matchId = `g${gid}_m${idx}`;
+        if (isMatchLocked(matchId)) return;
+        const h = document.getElementById(`${matchId}_h`)?.value;
+        const a = document.getElementById(`${matchId}_a`)?.value;
+        if (h === '' || a === '') missingGroupScores.push(`Group ${gid} Match ${idx + 1}`);
+      });
     });
-  });
-  if (missingGroupScores.length) return `Please complete all group-stage scores first. Missing: ${missingGroupScores.slice(0, 3).join(', ')}${missingGroupScores.length > 3 ? '...' : ''}`;
+    if (missingGroupScores.length) return `Please complete all group-stage scores first. Missing: ${missingGroupScores.slice(0, 3).join(', ')}${missingGroupScores.length > 3 ? '...' : ''}`;
+  }
 
   for (const stage of KNOCKOUT_METADATA) {
     for (let i = 1; i <= stage.loops; i++) {
@@ -1554,20 +1586,21 @@ function validateBracketReady() {
 
 
 function collectBracketData() {
-  const qualifiers = getTournamentQualifiers();
+  const qualifiers = R32_LATE_ENTRY_MODE ? { groups: {}, bestThirds: [] } : getTournamentQualifiers();
   const champion = getKnockoutWinner('final', 1);
   const submittedAt = new Date();
   const data = {
     submitted_at_client: submittedAt.toISOString(),
+    entry_mode: R32_LATE_ENTRY_MODE ? 'r32_late_entry' : 'full_tournament',
     groups: {},
     group_standings: {},
-    best_third_place_teams: qualifiers.bestThirds.map(r => ({ group: r.group, team: r.team, name: TEAM_DATA[r.team], pts: r.pts, gd: r.gd, gf: r.gf, ga: r.ga })),
+    best_third_place_teams: R32_LATE_ENTRY_MODE ? [] : qualifiers.bestThirds.map(r => ({ group: r.group, team: r.team, name: TEAM_DATA[r.team], pts: r.pts, gd: r.gd, gf: r.gf, ga: r.ga })),
     knockouts: {},
     champion: champion ? { name: champion.name, code: champion.code } : null,
     total_goals: document.getElementById('total-goals')?.value || null
   };
 
-  Object.keys(TOURNAMENT_GROUPS).forEach(gid => {
+  if (!R32_LATE_ENTRY_MODE) Object.keys(TOURNAMENT_GROUPS).forEach(gid => {
     data.groups[gid] = [];
     TOURNAMENT_GROUPS[gid].forEach((m, idx) => {
       const matchId = `g${gid}_m${idx}`;
@@ -1763,7 +1796,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function submitBracket() {
   try {
     if (isEntryClosed()) {
-      alert('Entries are closed. No new brackets can be submitted.');
+      alert('R32 late entries are closed. No new brackets can be submitted.');
       return;
     }
     if (!supabaseClient) {
@@ -1836,7 +1869,7 @@ async function submitBracket() {
     }
 
     btn.disabled = false;
-    btn.innerText = 'Submit Bracket';
+    btn.innerText = R32_LATE_ENTRY_MODE ? 'Submit R32 Bracket' : 'Submit Bracket';
 
   } catch (err) {
     console.error(err);
