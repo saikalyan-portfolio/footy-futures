@@ -473,6 +473,91 @@
     }
   }
 
+  /* ── R32 Auto-Filler ── */
+  .autofill-wrap {
+    max-width: 1100px;
+    margin: 22px auto 0;
+    padding: 0 24px;
+  }
+  .autofill-card {
+    background:
+      radial-gradient(circle at 8% 18%, rgba(57, 255, 20, 0.10), transparent 35%),
+      rgba(15, 23, 42, 0.74);
+    border: 1px solid rgba(57, 255, 20, 0.28);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.30);
+  }
+  .autofill-title {
+    font-family: 'Anton', sans-serif;
+    color: var(--accent-lime);
+    font-size: 22px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .autofill-copy {
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.45;
+    margin-bottom: 14px;
+  }
+  .autofill-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .autofill-select {
+    flex: 1;
+    min-width: 240px;
+    background: var(--input-bg);
+    color: var(--text-white);
+    border: 1px solid rgba(57, 255, 20, 0.35);
+    border-radius: 8px;
+    padding: 13px 14px;
+    font-weight: 900;
+    outline: none;
+  }
+  .autofill-btn {
+    background: var(--accent-lime);
+    color: var(--bg-dark);
+    border: 1px solid var(--accent-lime);
+    border-radius: 8px;
+    padding: 13px 18px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    transition: all 0.2s ease;
+  }
+  .autofill-btn:hover {
+    background: #6bff4f;
+    transform: translateY(-1px);
+  }
+  .autofill-secondary {
+    background: transparent;
+    color: var(--accent-cyan);
+    border-color: rgba(0, 240, 255, 0.35);
+  }
+  .autofill-secondary:hover {
+    background: rgba(0, 240, 255, 0.10);
+  }
+  .autofill-status {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 800;
+    margin-top: 10px;
+  }
+  @media(max-width: 720px) {
+    .autofill-btn,
+    .autofill-select {
+      width: 100%;
+    }
+  }
+
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -536,6 +621,24 @@
     <div id="player-name-status" style="margin-top:10px; font-size:12px; font-weight:800; color:var(--text-muted);"></div>
   </div>
 </div>
+
+
+<section class="autofill-wrap" id="r32-autofill">
+  <div class="autofill-card">
+    <div class="autofill-title">Quick Auto-Fill</div>
+    <p class="autofill-copy">
+      Short on time? Pick your tournament winner and Footy Futures will randomly complete every R32-to-Final score while forcing your chosen team to win the tournament. You can still edit any score after this.
+    </p>
+    <div class="autofill-row">
+      <select class="autofill-select" id="autofill-champion">
+        <option value="">Choose tournament winner...</option>
+      </select>
+      <button class="autofill-btn" type="button" onclick="autoFillBracketFromChampion()">Auto-Fill Bracket</button>
+      <button class="autofill-btn autofill-secondary" type="button" onclick="clearAutoFilledBracket()">Clear Knockouts</button>
+    </div>
+    <div class="autofill-status" id="autofill-status"></div>
+  </div>
+</section>
 
 <div class="section-divider" id="game" data-late-hide="true"><div class="label">Group Stage <span>Fixtures</span></div><div class="line"></div></div>
 <div class="unified-grid" id="matches-matrix-grid" data-late-hide="true"></div>
@@ -1111,6 +1214,7 @@ function initEngine() {
   clearAllKnockoutInputs();
   if (R32_LATE_ENTRY_MODE) populateResolvedR32Bracket();
   applyLateEntryModeUi();
+  populateAutofillChampionOptions();
   applyMatchLocks();
 }
 
@@ -1581,6 +1685,132 @@ function validateBracketReady() {
   }
   if (!getKnockoutWinner('final', 1)) return 'Please complete the Final and lock a champion.';
   return null;
+}
+
+
+
+function getR32TeamOptions() {
+  return R32_MATCHUPS
+    .flat()
+    .filter(Boolean)
+    .map(code => ({ code, name: TEAM_DATA[code] || code }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function populateAutofillChampionOptions() {
+  const select = document.getElementById('autofill-champion');
+  if (!select) return;
+
+  const currentValue = select.value;
+  select.innerHTML = '<option value="">Choose tournament winner...</option>' +
+    getR32TeamOptions()
+      .map(team => `<option value="${team.code}">${team.name}</option>`)
+      .join('');
+
+  if (currentValue) select.value = currentValue;
+}
+
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function setValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = String(value);
+}
+
+function clearMatchResolution(stageId, matchNum) {
+  ['s1', 's2', 'et1', 'et2', 'pen1', 'pen2'].forEach(field => {
+    const el = document.getElementById(`${stageId}_m${matchNum}_${field}`);
+    if (el) el.value = '';
+  });
+}
+
+function setRandomRegularTimeWin(stageId, matchNum, winningSide) {
+  clearMatchResolution(stageId, matchNum);
+
+  const loserGoals = randomInt(0, 2);
+  const winnerGoals = loserGoals + randomInt(1, 3);
+
+  if (winningSide === 1) {
+    setValue(`${stageId}_m${matchNum}_s1`, winnerGoals);
+    setValue(`${stageId}_m${matchNum}_s2`, loserGoals);
+  } else {
+    setValue(`${stageId}_m${matchNum}_s1`, loserGoals);
+    setValue(`${stageId}_m${matchNum}_s2`, winnerGoals);
+  }
+}
+
+function fillStageWithChampion(stageId, loops, championCode) {
+  for (let i = 1; i <= loops; i++) {
+    const t1El = document.getElementById(`${stageId}_m${i}_t1`);
+    const t2El = document.getElementById(`${stageId}_m${i}_t2`);
+    const t1Code = t1El?.dataset.teamCode || '';
+    const t2Code = t2El?.dataset.teamCode || '';
+
+    if (!t1Code || !t2Code) continue;
+
+    let winningSide;
+    if (t1Code === championCode) winningSide = 1;
+    else if (t2Code === championCode) winningSide = 2;
+    else winningSide = Math.random() < 0.5 ? 1 : 2;
+
+    setRandomRegularTimeWin(stageId, i, winningSide);
+  }
+
+  updateKnockoutProgression();
+}
+
+function autoFillBracketFromChampion() {
+  if (isEntryClosed()) {
+    alert('R32 late entries are closed. No new brackets can be submitted.');
+    return;
+  }
+
+  const select = document.getElementById('autofill-champion');
+  const status = document.getElementById('autofill-status');
+  const championCode = select?.value || '';
+
+  if (!championCode) {
+    alert('Choose a tournament winner first.');
+    return;
+  }
+
+  clearAllKnockoutInputs();
+  populateResolvedR32Bracket();
+  updateKnockoutProgression();
+
+  fillStageWithChampion('r32', 16, championCode);
+  fillStageWithChampion('r16', 8, championCode);
+  fillStageWithChampion('qf', 4, championCode);
+  fillStageWithChampion('sf', 2, championCode);
+  fillStageWithChampion('final', 1, championCode);
+
+  if (!document.getElementById('total-goals')?.value) {
+    setValue('total-goals', randomInt(170, 225));
+  }
+
+  const champion = getKnockoutWinner('final', 1);
+  if (status) {
+    status.innerText = champion
+      ? `Auto-filled. Predicted champion: ${champion.name}. You can still edit any match manually.`
+      : 'Auto-filled bracket. Please review before submitting.';
+    status.style.color = 'var(--accent-lime)';
+  }
+
+  document.getElementById('knockouts-matrix-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearAutoFilledBracket() {
+  clearAllKnockoutInputs();
+  populateResolvedR32Bracket();
+  updateKnockoutProgression();
+
+  const status = document.getElementById('autofill-status');
+  if (status) {
+    status.innerText = 'Knockout predictions cleared. Choose a winner to auto-fill again.';
+    status.style.color = 'var(--text-muted)';
+  }
 }
 
 
