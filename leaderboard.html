@@ -712,7 +712,7 @@
 <section class="invite-strip-wrap">
   <div class="invite-strip">
     <span class="invite-text">
-      <strong>200+ Players Already ⚽</strong> Join the competition or challenge a friend.
+      <strong>185+ Players Already ⚽</strong> Join the competition or challenge a friend.
     </span>
     <button class="invite-share-btn" onclick="copyShareLink()">
       Copy Link to Share
@@ -1012,7 +1012,7 @@ function renderLeaderboard() {
           <div class="points">${Number(row.total_points ?? 0)}</div>
           <div class="points-label">points</div>
           <div class="breakdown-preview">
-            M:${b.matchOutcome} · XS:${b.exactScore} · GP:${b.groupTable} · KO:${b.knockout} · ET:${b.etPens}
+            GMO:${b.matchOutcome} · GXS:${b.exactScore} · GT:${b.groupTable} · KO:${b.knockout} · KXS:${b.knockoutExact} · ET:${b.etPens}
           </div>
         </div>
         <div class="champion">${escapeHtml(champion)}</div>
@@ -1082,6 +1082,7 @@ function normalizeBreakdown(b) {
     exactScore: Number(data.group_exact_score ?? data.group_exact_scores ?? 0),
     groupTable: Number(data.group_table_positions ?? 0),
     knockout: Number(data.knockout_progression ?? 0),
+    knockoutExact: Number(data.knockout_exact_score ?? 0),
     etPens: Number(data.et_penalty_resolution ?? 0),
     total: Number(data.total ?? 0)
   };
@@ -1092,17 +1093,18 @@ function scoreBreakdownTable(b) {
   if (!b || !Object.keys(b).length) return '<div class="empty">No score breakdown yet. Scores will appear after the first completed result is processed.</div>';
 
   const rows = [
-    ['Match outcomes', s.matchOutcome, 'Correct 90-minute result direction'],
-    ['Exact scores', s.exactScore, 'Correct scoreline'],
-    ['Group positions', s.groupTable, 'Correct 1st, 2nd, or 3rd place'],
-    ['Knockout progression', s.knockout, 'Correct advancing teams'],
-    ['ET / penalties', s.etPens, 'Correct resolution method'],
+    ['Group match outcomes', s.matchOutcome, 'Correct group-stage 90-minute result direction'],
+    ['Group exact scores', s.exactScore, 'Correct group-stage scoreline'],
+    ['Group table positions', s.groupTable, 'Correct 1st, 2nd, or 3rd place in each group'],
+    ['Knockout match winners', s.knockout, 'Correct winner of an actual knockout matchup'],
+    ['Knockout exact scores', s.knockoutExact, 'Exact 90-minute score for a correct knockout matchup and winner'],
+    ['ET / penalties', s.etPens, 'Correct extra-time or penalties resolution method'],
     ['Total', s.total, 'Leaderboard points']
   ];
 
   return `
     <div class="score-pills">
-      ${rows.slice(0, 5).map(([label, value]) => `
+      ${rows.slice(0, 6).map(([label, value]) => `
         <span class="score-pill">${escapeHtml(label)}: <strong>${escapeHtml(value)}</strong></span>
       `).join('')}
     </div>
