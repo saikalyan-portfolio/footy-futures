@@ -558,6 +558,745 @@
   }
 
 
+
+  /* ── Live Tournament Dashboard / Visual Results ── */
+  .results-hub {
+    max-width: 1100px;
+    margin: 28px auto 8px;
+    padding: 0 24px;
+  }
+  .results-hero-card {
+    border: 1px solid rgba(0, 240, 255, 0.18);
+    background:
+      radial-gradient(circle at 12% 18%, rgba(0, 240, 255, 0.10), transparent 32%),
+      radial-gradient(circle at 88% 12%, rgba(57, 255, 20, 0.08), transparent 28%),
+      rgba(15, 23, 42, 0.72);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.32);
+  }
+  .results-kicker {
+    color: var(--accent-cyan);
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .results-title {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(30px, 5vw, 48px);
+    line-height: 1;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .results-title span { color: var(--accent-lime); }
+  .results-copy {
+    color: var(--text-muted);
+    max-width: 760px;
+    font-size: 13px;
+  }
+  .results-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+  .results-tab {
+    border: 1px solid rgba(0, 240, 255, .24);
+    background: rgba(0, 240, 255, .06);
+    color: var(--accent-cyan);
+    border-radius: 999px;
+    padding: 9px 13px;
+    font-size: 11px;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    cursor: pointer;
+  }
+  .results-tab.active,
+  .results-tab:hover {
+    color: var(--bg-dark);
+    background: var(--accent-lime);
+    border-color: var(--accent-lime);
+  }
+  .results-panel { display: none; margin-top: 18px; }
+  .results-panel.active { display: block; }
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+    gap: 14px;
+  }
+  .visual-card {
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(5, 10, 20, .54);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .visual-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(18, 30, 48, 0.70);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .visual-card-head h4 {
+    font-family: 'Anton', sans-serif;
+    color: var(--accent-lime);
+    font-size: 20px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  .visual-meta {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+  }
+  .actual-result-row {
+    display: grid;
+    grid-template-columns: 1fr 58px 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,.045);
+  }
+  .actual-result-row:last-child { border-bottom: none; }
+  .actual-team {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    font-weight: 850;
+    color: var(--text-white);
+  }
+  .actual-team.away { justify-content: flex-end; text-align: right; }
+  .actual-team span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .actual-score {
+    font-family: 'Anton', sans-serif;
+    color: var(--accent-cyan);
+    text-align: center;
+    font-size: 20px;
+    line-height: 1;
+  }
+  .actual-status {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    margin-top: -4px;
+  }
+  .actual-flag {
+    width: 24px;
+    height: 17px;
+    border-radius: 3px;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.12);
+    background: rgba(255,255,255,.08);
+    flex-shrink: 0;
+  }
+  .actual-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .actual-table th {
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    text-align: left;
+    padding: 8px 6px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .actual-table td {
+    padding: 8px 6px;
+    border-bottom: 1px solid rgba(255,255,255,.045);
+    vertical-align: middle;
+  }
+  .actual-table tr:last-child td { border-bottom: none; }
+  .actual-rank { color: var(--accent-cyan); font-weight: 950; }
+  .actual-team-cell {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 900;
+  }
+  .empty-visual {
+    padding: 18px 14px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 850;
+  }
+  @media(max-width: 640px) {
+    .actual-result-row { grid-template-columns: 1fr 52px 1fr; }
+    .actual-score { font-size: 17px; }
+    .actual-team { font-size: 12px; }
+  }
+
+
+
+  .knockout-bracket-wrap {
+    margin-top: 6px;
+  }
+  .knockout-bracket-board {
+    display: grid;
+    grid-template-columns: minmax(190px, 1fr) minmax(160px, .9fr) minmax(145px, .8fr) minmax(130px, .7fr) minmax(170px, .9fr) minmax(130px, .7fr) minmax(145px, .8fr) minmax(160px, .9fr) minmax(190px, 1fr);
+    gap: 14px;
+    align-items: start;
+    overflow-x: auto;
+    padding: 10px 4px 4px;
+  }
+  .knockout-stage-col {
+    min-width: 130px;
+  }
+  .stage-col-title {
+    text-align: center;
+    color: var(--accent-cyan);
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .stage-col-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .stage-col-stack.r16 { margin-top: 28px; gap: 38px; }
+  .stage-col-stack.qf { margin-top: 64px; gap: 82px; }
+  .stage-col-stack.sf { margin-top: 112px; gap: 178px; }
+  .knockout-match-card {
+    border: 1px solid rgba(0, 240, 255, .14);
+    background: linear-gradient(180deg, rgba(8, 15, 29, .94), rgba(7, 12, 22, .88));
+    border-radius: 12px;
+    padding: 9px 10px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.24);
+    min-height: 86px;
+  }
+  .knockout-match-card.highlight {
+    border-color: rgba(57, 255, 20, .32);
+    box-shadow: 0 0 0 1px rgba(57, 255, 20, .1), 0 12px 28px rgba(0,0,0,.28);
+  }
+  .knockout-match-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 7px;
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .knockout-match-status {
+    color: var(--accent-lime);
+  }
+  .knockout-team-line {
+    display: grid;
+    grid-template-columns: 18px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .knockout-team-line:last-of-type { border-bottom: none; }
+  .knockout-team-line img {
+    width: 18px;
+    height: 13px;
+    object-fit: cover;
+    border-radius: 2px;
+  }
+  .knockout-team-name {
+    color: var(--text-white);
+    font-size: 11px;
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .knockout-score-chip {
+    min-width: 24px;
+    text-align: center;
+    font-family: 'Anton', sans-serif;
+    font-size: 16px;
+    line-height: 1;
+    color: var(--accent-cyan);
+  }
+  .knockout-team-line.winner .knockout-team-name,
+  .knockout-team-line.winner .knockout-score-chip {
+    color: var(--accent-lime);
+  }
+  .knockout-match-foot {
+    margin-top: 7px;
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+  }
+  .knockout-final-col {
+    padding-top: 155px;
+  }
+  .knockout-final-card {
+    text-align: center;
+    padding: 14px 12px 16px;
+    min-height: 152px;
+    border: 1px solid rgba(57,255,20,.28);
+    background: radial-gradient(circle at 50% 18%, rgba(57,255,20,.12), transparent 36%), linear-gradient(180deg, rgba(13, 23, 42, .96), rgba(9, 15, 28, .92));
+  }
+  .knockout-final-title {
+    color: var(--accent-cyan);
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .knockout-trophy {
+    font-size: 34px;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .knockout-champion-name {
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--accent-lime);
+    margin-bottom: 8px;
+  }
+  .knockout-final-meta {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .knockout-bracket-note {
+    margin-top: 12px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  @media (max-width: 1180px) {
+    .knockout-bracket-board { width: max-content; min-width: 100%; }
+  }
+
+
+
+  /* ── Knockout Bracket Clean Responsive Upgrade ── */
+  .knockout-bracket-wrap {
+    margin-top: 8px;
+  }
+  .knockout-bracket-board {
+    display: block !important;
+    overflow-x: visible !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+  }
+  .knockout-mobile-board {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .knockout-stage-section {
+    border: 1px solid rgba(0, 240, 255, .12);
+    background: rgba(6, 12, 24, .36);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .knockout-stage-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .knockout-stage-title {
+    font-family: 'Anton', sans-serif;
+    color: var(--accent-cyan);
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+  }
+  .knockout-stage-count {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+  }
+  .knockout-stage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+  .knockout-stage-grid.compact {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .knockout-match-card {
+    border: 1px solid rgba(0, 240, 255, .14) !important;
+    background: linear-gradient(180deg, rgba(8, 15, 29, .94), rgba(7, 12, 22, .88)) !important;
+    border-radius: 14px !important;
+    padding: 11px 12px !important;
+    box-shadow: 0 10px 26px rgba(0,0,0,.22) !important;
+    min-height: 0 !important;
+  }
+  .knockout-match-card.highlight {
+    border-color: rgba(57, 255, 20, .38) !important;
+    background: linear-gradient(180deg, rgba(13, 26, 35, .96), rgba(7, 12, 22, .9)) !important;
+  }
+  .knockout-match-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
+    color: var(--text-muted) !important;
+    font-size: 9px !important;
+    font-weight: 950 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .8px !important;
+  }
+  .knockout-match-status {
+    border: 1px solid rgba(57,255,20,.28);
+    background: rgba(57,255,20,.08);
+    color: var(--accent-lime) !important;
+    border-radius: 999px;
+    padding: 3px 7px;
+    font-size: 8px;
+    white-space: nowrap;
+  }
+  .knockout-team-line {
+    display: grid !important;
+    grid-template-columns: 22px 1fr auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+    padding: 7px 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,.055) !important;
+  }
+  .knockout-team-line:last-of-type { border-bottom: none !important; }
+  .knockout-team-line img {
+    width: 22px !important;
+    height: 15px !important;
+    object-fit: cover !important;
+    border-radius: 3px !important;
+    border: 1px solid rgba(255,255,255,.15);
+  }
+  .knockout-team-name {
+    color: var(--text-white) !important;
+    font-size: 12px !important;
+    font-weight: 850 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .knockout-score-chip {
+    min-width: 28px !important;
+    text-align: center !important;
+    font-family: 'Anton', sans-serif !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    color: var(--accent-cyan) !important;
+  }
+  .knockout-team-line.winner .knockout-team-name,
+  .knockout-team-line.winner .knockout-score-chip {
+    color: var(--accent-lime) !important;
+  }
+  .knockout-match-foot { display: none !important; }
+  .knockout-final-card {
+    text-align: center !important;
+    padding: 18px 14px !important;
+    min-height: 0 !important;
+    border: 1px solid rgba(57,255,20,.34) !important;
+    background: radial-gradient(circle at 50% 16%, rgba(57,255,20,.16), transparent 34%), linear-gradient(180deg, rgba(13, 23, 42, .96), rgba(9, 15, 28, .92)) !important;
+  }
+  .knockout-final-title {
+    color: var(--accent-cyan) !important;
+    font-size: 10px !important;
+    font-weight: 950 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    margin-bottom: 10px !important;
+  }
+  .knockout-trophy {
+    font-size: 34px !important;
+    line-height: 1 !important;
+    margin-bottom: 10px !important;
+  }
+  .knockout-champion-name {
+    font-family: 'Anton', sans-serif !important;
+    font-size: 28px !important;
+    line-height: .95 !important;
+    text-transform: uppercase !important;
+    color: var(--accent-lime) !important;
+    margin-bottom: 10px !important;
+  }
+  .knockout-final-meta {
+    color: var(--text-muted) !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .8px !important;
+  }
+  .knockout-bracket-note { display: none !important; }
+  @media (max-width: 720px) {
+    .knockout-stage-section { padding: 12px; }
+    .knockout-stage-grid,
+    .knockout-stage-grid.compact { grid-template-columns: 1fr; }
+    .knockout-stage-header { flex-direction: column; align-items: flex-start; gap: 5px; }
+  }
+
+
+
+  /* ── Knockout Geometry Bracket Final Pass ── */
+  #actual-knockout-results-grid {
+    width: 100%;
+  }
+  .knockout-geometry-wrap {
+    margin-top: 6px;
+    border: 1px solid rgba(0, 240, 255, .16);
+    background:
+      radial-gradient(circle at 50% 50%, rgba(57, 255, 20, .07), transparent 28%),
+      linear-gradient(90deg, rgba(0, 240, 255, .035) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(0, 240, 255, .028) 1px, transparent 1px),
+      rgba(5, 13, 23, .72);
+    background-size: auto, 64px 64px, 64px 64px, auto;
+    border-radius: 18px;
+    padding: 16px;
+    overflow: hidden;
+    box-shadow: inset 0 0 50px rgba(0,0,0,.22), 0 14px 34px rgba(0,0,0,.26);
+  }
+  .knockout-geometry-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .geometry-title {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(26px, 3.4vw, 42px);
+    line-height: .92;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+  }
+  .geometry-title span { color: var(--accent-lime); }
+  .geometry-count {
+    border: 1px solid rgba(57,255,20,.28);
+    background: rgba(57,255,20,.07);
+    color: var(--accent-lime);
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .knockout-geometry-board {
+    display: grid !important;
+    grid-template-columns: 1.08fr .98fr .88fr .78fr 1.05fr .78fr .88fr .98fr 1.08fr !important;
+    gap: 9px !important;
+    align-items: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .knockout-geometry-col,
+  .knockout-geometry-final {
+    min-width: 0;
+  }
+  .geometry-stage-title {
+    min-height: 26px;
+    color: var(--accent-cyan);
+    font-size: clamp(7px, .74vw, 10px);
+    font-weight: 950;
+    letter-spacing: .9px;
+    text-align: center;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+    white-space: normal;
+  }
+  .geometry-stage-title span {
+    color: var(--text-muted);
+    display: block;
+    font-size: 8px;
+    letter-spacing: .4px;
+    margin-top: 2px;
+  }
+  .geometry-stage-stack {
+    display: flex;
+    flex-direction: column;
+  }
+  .geometry-stage-stack.r32 { gap: 8px; }
+  .geometry-stage-stack.r16 { margin-top: 30px; gap: 43px; }
+  .geometry-stage-stack.qf  { margin-top: 94px; gap: 132px; }
+  .geometry-stage-stack.sf  { margin-top: 232px; }
+  .knockout-geometry-final { margin-top: 288px; }
+  .knockout-match-card {
+    position: relative;
+    min-height: 66px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(0, 240, 255, .16) !important;
+    background: rgba(5, 10, 20, .90) !important;
+    padding: 7px 8px !important;
+    box-shadow: 0 8px 18px rgba(0,0,0,.18) !important;
+  }
+  .knockout-match-card.highlight {
+    border-color: rgba(57,255,20,.44) !important;
+    background: linear-gradient(180deg, rgba(12, 31, 31, .95), rgba(5, 10, 20, .92)) !important;
+  }
+  .knockout-match-card.left::after,
+  .knockout-match-card.right::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 9px;
+    height: 1px;
+    background: rgba(0, 240, 255, .26);
+  }
+  .knockout-match-card.left::after { right: -10px; }
+  .knockout-match-card.right::before { left: -10px; }
+  .knockout-geometry-col.sf .knockout-match-card.left::after,
+  .knockout-geometry-col.sf .knockout-match-card.right::before { background: rgba(57,255,20,.32); }
+  .knockout-match-head {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 4px !important;
+    color: var(--text-muted) !important;
+    font-size: 8px !important;
+    font-weight: 950 !important;
+    letter-spacing: .55px !important;
+    text-transform: uppercase !important;
+  }
+  .knockout-match-status {
+    border: 1px solid rgba(0,240,255,.16) !important;
+    background: rgba(0,240,255,.05) !important;
+    color: var(--text-muted) !important;
+    border-radius: 999px !important;
+    padding: 2px 5px !important;
+    font-size: 7px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+  .knockout-match-card.highlight .knockout-match-status {
+    border-color: rgba(57,255,20,.36) !important;
+    background: rgba(57,255,20,.09) !important;
+    color: var(--accent-lime) !important;
+  }
+  .knockout-team-line {
+    display: grid !important;
+    grid-template-columns: 18px minmax(0, 1fr) auto !important;
+    gap: 6px !important;
+    align-items: center !important;
+    padding: 4px 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,.052) !important;
+  }
+  .knockout-team-line img {
+    width: 18px !important;
+    height: 13px !important;
+    object-fit: cover !important;
+    border-radius: 2px !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+  }
+  .knockout-team-name {
+    color: var(--text-white) !important;
+    font-size: clamp(9px, .78vw, 11px) !important;
+    font-weight: 850 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .knockout-score-chip {
+    min-width: 18px !important;
+    text-align: right !important;
+    font-family: 'Anton', sans-serif !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+    color: var(--accent-cyan) !important;
+  }
+  .knockout-team-line.winner .knockout-team-name,
+  .knockout-team-line.winner .knockout-score-chip {
+    color: var(--accent-lime) !important;
+  }
+  .knockout-final-card {
+    min-height: 150px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    text-align: center !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(57,255,20,.38) !important;
+    background: radial-gradient(circle at 50% 20%, rgba(57,255,20,.16), transparent 38%), rgba(5,10,20,.94) !important;
+    padding: 13px 10px !important;
+  }
+  .knockout-final-title {
+    color: var(--accent-cyan) !important;
+    font-size: 9px !important;
+    font-weight: 950 !important;
+    letter-spacing: .9px !important;
+    text-transform: uppercase !important;
+    margin-bottom: 8px !important;
+  }
+  .knockout-trophy { font-size: 30px !important; margin-bottom: 8px !important; }
+  .knockout-champion-name {
+    font-family: 'Anton', sans-serif !important;
+    font-size: clamp(16px, 1.45vw, 22px) !important;
+    line-height: .92 !important;
+    color: var(--accent-lime) !important;
+    text-transform: uppercase !important;
+    margin-bottom: 8px !important;
+    overflow-wrap: anywhere !important;
+  }
+  .knockout-final-meta {
+    color: var(--text-muted) !important;
+    font-size: 9px !important;
+    font-weight: 900 !important;
+    letter-spacing: .6px !important;
+    text-transform: uppercase !important;
+  }
+  .knockout-bracket-note,
+  .knockout-match-foot { display: none !important; }
+
+  @media (max-width: 980px) {
+    .knockout-geometry-board {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+    }
+    .knockout-geometry-col,
+    .knockout-geometry-final { margin-top: 0 !important; }
+    .geometry-stage-stack,
+    .geometry-stage-stack.r16,
+    .geometry-stage-stack.qf,
+    .geometry-stage-stack.sf {
+      margin-top: 0 !important;
+      gap: 8px !important;
+    }
+    .knockout-match-card.left::after,
+    .knockout-match-card.right::before { display: none !important; }
+    .geometry-stage-title { font-size: 10px; }
+  }
+  @media (max-width: 640px) {
+    .knockout-geometry-wrap { padding: 12px; }
+    .knockout-geometry-head { flex-direction: column; }
+    .knockout-geometry-board { grid-template-columns: 1fr !important; }
+    .knockout-team-name { font-size: 12px !important; }
+  }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -597,11 +1336,41 @@
 <section class="invite-strip-wrap">
   <div class="invite-strip">
     <span class="invite-text">
-      <strong>200+ Players Already ⚽</strong> Join the competition or challenge a friend.
+      <strong>185+ Players Already ⚽</strong> Join the competition or challenge a friend.
     </span>
     <button class="invite-share-btn" onclick="copyShareLink()">
       Copy Link to Share
     </button>
+  </div>
+</section>
+
+<section class="results-hub" id="live-results">
+  <div class="results-hero-card">
+    <div class="results-kicker">Tournament Dashboard</div>
+    <div class="results-title">Results, Tables & <span>Knockout Picture</span></div>
+    <p class="results-copy">
+      A read-only match centre for visitors: completed group-stage scores, official group tables calculated from actual results, and completed knockout results as they sync in. Prediction inputs remain separate below.
+    </p>
+    <div class="results-tabs" role="tablist" aria-label="Tournament results tabs">
+      <button class="results-tab active" type="button" data-results-tab="group-results" onclick="switchResultsTab('group-results')">Group Results</button>
+      <button class="results-tab" type="button" data-results-tab="tables" onclick="switchResultsTab('tables')">Group Tables</button>
+      <button class="results-tab" type="button" data-results-tab="knockouts" onclick="switchResultsTab('knockouts')">Knockout Bracket</button>
+    </div>
+    <div class="results-panel active" id="results-panel-group-results">
+      <div class="results-grid" id="actual-group-results-grid">
+        <div class="empty-visual">Loading completed group results...</div>
+      </div>
+    </div>
+    <div class="results-panel" id="results-panel-tables">
+      <div class="results-grid" id="actual-group-standings-grid">
+        <div class="empty-visual">Loading official group tables...</div>
+      </div>
+    </div>
+    <div class="results-panel" id="results-panel-knockouts">
+      <div id="actual-knockout-results-grid">
+        <div class="empty-visual">Waiting for completed knockout results to sync...</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -654,9 +1423,10 @@
   <div class="wildcard-card">
     <h3>Points System</h3>
     <div style="font-size: 13px; color: var(--text-muted);">
-      <p style="border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom:6px; margin-bottom:6px; display:flex; justify-content:space-between;">Match outcome / exact score<span style="color:var(--accent-lime)">+2 / +5</span></p>
+      <p style="border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom:6px; margin-bottom:6px; display:flex; justify-content:space-between;">Group outcome / exact score<span style="color:var(--accent-lime)">+2 / +5</span></p>
       <p style="border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom:6px; margin-bottom:6px; display:flex; justify-content:space-between;">Group table accuracy<span style="color:var(--accent-lime)">+2 to +3</span></p>
-      <p style="border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom:6px; margin-bottom:6px; display:flex; justify-content:space-between;">Knockout progression rises by round<span style="color:var(--accent-lime)">+4 to +30</span></p>
+      <p style="border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom:6px; margin-bottom:6px; display:flex; justify-content:space-between;">Knockout match winners<span style="color:var(--accent-lime)">+4 to +30</span></p>
+      <p style="border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom:6px; margin-bottom:6px; display:flex; justify-content:space-between;">Knockout exact 90-min score<span style="color:var(--accent-lime)">+2</span></p>
       <p style="padding-bottom:6px; display:flex; justify-content:space-between;">ET / penalty resolution bonus<span style="color:var(--accent-lime)">+3</span></p>
     </div>
   </div>
@@ -699,15 +1469,16 @@
   </div>
   <div class="howto-card">
     <h3>Points System</h3>
-    <div class="score-line"><span>Match outcome</span><strong>+2</strong></div>
-    <div class="score-line"><span>Exact scoreline</span><strong>+5</strong></div>
+    <div class="score-line"><span>Group match outcome</span><strong>+2</strong></div>
+    <div class="score-line"><span>Group exact scoreline</span><strong>+5</strong></div>
     <div class="score-line"><span>Correct group winner / runner-up</span><strong>+3</strong></div>
     <div class="score-line"><span>Correct group third place</span><strong>+2</strong></div>
-    <div class="score-line"><span>Correct R32 advance</span><strong>+4</strong></div>
-    <div class="score-line"><span>Correct R16 advance</span><strong>+6</strong></div>
-    <div class="score-line"><span>Correct QF advance</span><strong>+10</strong></div>
-    <div class="score-line"><span>Correct finalist</span><strong>+15</strong></div>
+    <div class="score-line"><span>Correct R32 match winner</span><strong>+4</strong></div>
+    <div class="score-line"><span>Correct R16 match winner</span><strong>+6</strong></div>
+    <div class="score-line"><span>Correct QF match winner</span><strong>+10</strong></div>
+    <div class="score-line"><span>Correct SF match winner / finalist</span><strong>+15</strong></div>
     <div class="score-line"><span>Correct champion</span><strong>+30</strong></div>
+    <div class="score-line"><span>Knockout exact 90-min score</span><strong>+2</strong></div>
     <div class="score-line"><span>Correct ET / penalty resolution</span><strong>+3</strong></div>
   </div>
   <div class="howto-card">
@@ -933,10 +1704,75 @@ const MATCH_KICKOFFS = {
 
 
 // ── LIVE ACTUAL RESULTS FROM SUPABASE ───────────────────
-// GitHub Actions syncs Zafronix FT scores into public.actual_results.
-// The frontend reads only completed rows using the public anon SELECT policy.
+// GitHub Actions syncs final scores into public.actual_results.
+// This page uses those rows only for read-only visuals and lock badges.
+// Prediction inputs remain blank for late submissions, so users do not inherit actual scores.
 let MATCH_RESULTS = {};
+let ACTUAL_RESULT_ROWS = [];
 let actualResultsLoaded = false;
+
+const FIFA_CODE_TO_LOCAL_CODE = {
+  MEX: 'mx', RSA: 'za', KOR: 'kr', CZE: 'cz', CAN: 'ca', BIH: 'ba', QAT: 'qa', SUI: 'ch',
+  BRA: 'br', MAR: 'ma', HAI: 'ht', SCO: 'gb-sct', USA: 'us', PAR: 'py', AUS: 'au', TUR: 'tr',
+  CIV: 'ci', ECU: 'ec', GER: 'de', CUW: 'cw', NED: 'nl', JPN: 'jp', SWE: 'se', TUN: 'tn',
+  IRN: 'ir', NZL: 'nz', BEL: 'be', EGY: 'eg', KSA: 'sa', URU: 'uy', ESP: 'es', CPV: 'cv',
+  FRA: 'fr', SEN: 'sn', IRQ: 'iq', NOR: 'no', ARG: 'ar', ALG: 'dz', AUT: 'at', JOR: 'jo',
+  POR: 'pt', COD: 'cd', UZB: 'uz', COL: 'co', GHA: 'gh', PAN: 'pa', ENG: 'gb-eng', CRO: 'hr'
+};
+
+const TEAM_NAME_TO_LOCAL_CODE = Object.fromEntries(
+  Object.entries(TEAM_DATA).map(([code, name]) => [normalizeName(name), code])
+);
+Object.assign(TEAM_NAME_TO_LOCAL_CODE, {
+  'south korea': 'kr',
+  'korea republic': 'kr',
+  'usa': 'us',
+  'united states': 'us',
+  'bosnia': 'ba',
+  'bosnia and herzegovina': 'ba',
+  'cote divoire': 'ci',
+  'ivory coast': 'ci',
+  'dr congo': 'cd',
+  'drc': 'cd',
+  'cabo verde': 'cv',
+  'cape verde': 'cv',
+  'turkiye': 'tr',
+  'turkey': 'tr',
+  'curacao': 'cw',
+  'curaçao': 'cw',
+  'england': 'gb-eng',
+  'scotland': 'gb-sct'
+});
+
+function escape(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('\"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function normalizeName(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function toLocalTeamCode(code, name) {
+  const raw = String(code || '').trim();
+  const upper = raw.toUpperCase();
+  const lower = raw.toLowerCase();
+
+  if (TEAM_DATA[lower]) return lower;
+  if (FIFA_CODE_TO_LOCAL_CODE[upper]) return FIFA_CODE_TO_LOCAL_CODE[upper];
+
+  const byName = TEAM_NAME_TO_LOCAL_CODE[normalizeName(name)];
+  return byName || lower || '';
+}
 
 function getMatchResult(matchId) {
   return MATCH_RESULTS[matchId] || null;
@@ -951,43 +1787,383 @@ async function loadActualResults() {
 
   const { data, error } = await supabaseClient
     .from('actual_results')
-    .select('match_id, home_score, away_score, completed, api_status, updated_at, last_synced_at')
-.eq('completed', true);
+    .select('match_id, home_code, away_code, winner_code, home_name, away_name, winner_name, home_score, away_score, completed, stage, api_status, resolution_method, updated_at, last_synced_at')
+    .eq('completed', true);
 
   if (error) {
     console.error('Could not fetch actual results:', error);
+    renderActualTournamentState([]);
     return;
   }
 
   MATCH_RESULTS = {};
+  ACTUAL_RESULT_ROWS = [];
 
   (data || []).forEach(row => {
-      if (!row.match_id) return;
-
-  const apiStatus = String(row.api_status || '').toLowerCase();
-
-  const isFinished = [
-    'finished',
-    'complete',
-    'completed',
-    'ft',
-    'full_time'
-  ].includes(apiStatus);
     if (!row.match_id) return;
     if (row.home_score === null || row.home_score === undefined) return;
     if (row.away_score === null || row.away_score === undefined) return;
 
+    const inferred = inferMatchTeams(row.match_id);
+    const normalizedRow = {
+      ...row,
+      home_code: toLocalTeamCode(row.home_code, row.home_name) || inferred?.home || '',
+      away_code: toLocalTeamCode(row.away_code, row.away_name) || inferred?.away || '',
+      winner_code: toLocalTeamCode(row.winner_code, row.winner_name),
+      home_name: row.home_name || (inferred?.home ? TEAM_DATA[inferred.home] : ''),
+      away_name: row.away_name || (inferred?.away ? TEAM_DATA[inferred.away] : '')
+    };
+
+    ACTUAL_RESULT_ROWS.push(normalizedRow);
+
     MATCH_RESULTS[row.match_id] = {
-      homeScore: row.home_score,
-      awayScore: row.away_score,
+      homeScore: Number(row.home_score),
+      awayScore: Number(row.away_score),
       status: 'FT',
-      updatedAt: row.updated_at || row.last_synced_at || null
+      updatedAt: row.updated_at || row.last_synced_at || null,
+      row: normalizedRow
     };
   });
 
   actualResultsLoaded = true;
+  renderActualTournamentState(ACTUAL_RESULT_ROWS);
   applyMatchLocks();
-  // Do not re-run group tables from official results. The standings below are prediction-only.
+  // Do not re-run prediction group tables from official results.
+}
+
+function inferMatchTeams(matchId) {
+  const groupMatch = String(matchId || '').match(/^g([A-L])_m(\d+)$/i);
+  if (groupMatch) {
+    const gid = groupMatch[1].toUpperCase();
+    const idx = Number(groupMatch[2]);
+    const pair = TOURNAMENT_GROUPS[gid]?.[idx];
+    if (pair) return { home: pair[0], away: pair[1] };
+  }
+
+  const koMatch = String(matchId || '').match(/^r32_m(\d+)$/i);
+  if (koMatch && Array.isArray(R32_MATCHUPS)) {
+    const pair = R32_MATCHUPS[Number(koMatch[1]) - 1];
+    if (pair) return { home: pair[0], away: pair[1] };
+  }
+
+  return null;
+}
+
+function switchResultsTab(tab) {
+  document.querySelectorAll('.results-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.resultsTab === tab);
+  });
+  document.querySelectorAll('.results-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `results-panel-${tab}`);
+  });
+}
+
+function flagImg(code, name = '') {
+  const localCode = toLocalTeamCode(code, name);
+  if (!localCode) return '';
+  return `<img class="actual-flag" src="https://flagcdn.com/w40/${escape(localCode)}.png" alt="" loading="lazy">`;
+}
+
+function teamName(code, fallback = '') {
+  const localCode = toLocalTeamCode(code, fallback);
+  return TEAM_DATA[localCode] || fallback || localCode || 'TBD';
+}
+
+function resultSortValue(row) {
+  const id = String(row.match_id || '');
+  const group = id.match(/^g([A-L])_m(\d+)$/i);
+  if (group) return `1-${group[1]}-${String(group[2]).padStart(2, '0')}`;
+  const stageOrder = { r32: 2, r16: 3, qf: 4, sf: 5, final: 6 };
+  const ko = id.match(/^(r32|r16|qf|sf|final)_m(\d+)$/i);
+  if (ko) return `${stageOrder[ko[1].toLowerCase()] || 9}-${String(ko[2]).padStart(2, '0')}`;
+  return `9-${id}`;
+}
+
+function renderActualTournamentState(rows) {
+  renderActualGroupResults(rows);
+  renderActualGroupStandings(rows);
+  renderActualKnockoutResults(rows);
+}
+
+function renderActualGroupResults(rows) {
+  const grid = document.getElementById('actual-group-results-grid');
+  if (!grid) return;
+
+  const groupRows = rows
+    .filter(row => /^g[A-L]_m\d+$/i.test(String(row.match_id || '')))
+    .sort((a, b) => resultSortValue(a).localeCompare(resultSortValue(b)));
+
+  if (!groupRows.length) {
+    grid.innerHTML = '<div class="empty-visual">No completed group results found yet.</div>';
+    return;
+  }
+
+  const byGroup = {};
+  groupRows.forEach(row => {
+    const gid = String(row.match_id).match(/^g([A-L])_m/i)?.[1]?.toUpperCase() || '—';
+    if (!byGroup[gid]) byGroup[gid] = [];
+    byGroup[gid].push(row);
+  });
+
+  grid.innerHTML = Object.keys(byGroup).sort().map(gid => `
+    <div class="visual-card">
+      <div class="visual-card-head"><h4>Group ${escape(gid)}</h4><span class="visual-meta">Final Scores</span></div>
+      ${byGroup[gid].map(resultRowHtml).join('')}
+    </div>
+  `).join('');
+}
+
+function resultRowHtml(row) {
+  const homeCode = toLocalTeamCode(row.home_code, row.home_name);
+  const awayCode = toLocalTeamCode(row.away_code, row.away_name);
+  const method = row.resolution_method && row.resolution_method !== 'regular_time'
+    ? ` · ${String(row.resolution_method).replace('_', ' ')}`
+    : '';
+
+  return `
+    <div class="actual-result-row">
+      <div class="actual-team home">${flagImg(homeCode, row.home_name)}<span>${escape(teamName(homeCode, row.home_name))}</span></div>
+      <div class="actual-score">${escape(row.home_score)}-${escape(row.away_score)}</div>
+      <div class="actual-team away"><span>${escape(teamName(awayCode, row.away_name))}</span>${flagImg(awayCode, row.away_name)}</div>
+      <div class="actual-status">FINAL${escape(method)}</div>
+    </div>
+  `;
+}
+
+function getGroupIdFromMatchId(matchId) {
+  return String(matchId || '').match(/^g([A-L])_m/i)?.[1]?.toUpperCase() || null;
+}
+
+function buildActualGroupTable(rows, gid) {
+  const teams = [...new Set((TOURNAMENT_GROUPS[gid] || []).flat())];
+  const records = {};
+  teams.forEach(code => {
+    records[code] = { team: code, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 };
+  });
+
+  rows.filter(row => getGroupIdFromMatchId(row.match_id) === gid).forEach(row => {
+    const inferred = inferMatchTeams(row.match_id);
+    const hCode = toLocalTeamCode(row.home_code, row.home_name) || inferred?.home;
+    const aCode = toLocalTeamCode(row.away_code, row.away_name) || inferred?.away;
+    const h = Number(row.home_score);
+    const a = Number(row.away_score);
+    if (!hCode || !aCode || Number.isNaN(h) || Number.isNaN(a)) return;
+    if (!records[hCode]) records[hCode] = { team: hCode, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 };
+    if (!records[aCode]) records[aCode] = { team: aCode, p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 };
+
+    records[hCode].p++; records[aCode].p++;
+    records[hCode].gf += h; records[hCode].ga += a;
+    records[aCode].gf += a; records[aCode].ga += h;
+
+    if (h > a) { records[hCode].w++; records[aCode].l++; records[hCode].pts += 3; }
+    else if (h < a) { records[aCode].w++; records[hCode].l++; records[aCode].pts += 3; }
+    else { records[hCode].d++; records[aCode].d++; records[hCode].pts += 1; records[aCode].pts += 1; }
+  });
+
+  Object.values(records).forEach(r => r.gd = r.gf - r.ga);
+  return Object.values(records).sort(compareTeamRecords);
+}
+
+function renderActualGroupStandings(rows) {
+  const grid = document.getElementById('actual-group-standings-grid');
+  if (!grid) return;
+
+  const groups = Object.keys(TOURNAMENT_GROUPS).sort();
+  grid.innerHTML = groups.map(gid => {
+    const table = buildActualGroupTable(rows, gid);
+    const completed = rows.filter(row => getGroupIdFromMatchId(row.match_id) === gid).length;
+    return `
+      <div class="visual-card">
+        <div class="visual-card-head"><h4>Group ${escape(gid)}</h4><span class="visual-meta">${completed}/6 played</span></div>
+        <table class="actual-table">
+          <thead><tr><th>#</th><th>Team</th><th>P</th><th>GD</th><th>Pts</th></tr></thead>
+          <tbody>
+            ${table.map((r, idx) => `
+              <tr>
+                <td class="actual-rank">${idx + 1}</td>
+                <td><div class="actual-team-cell">${flagImg(r.team)}<span>${escape(teamName(r.team))}</span></div></td>
+                <td>${escape(r.p)}</td>
+                <td>${escape(r.gd > 0 ? `+${r.gd}` : r.gd)}</td>
+                <td><strong>${escape(r.pts)}</strong></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }).join('');
+}
+
+function knockoutStageLabel(stage) {
+  const s = String(stage || '').toLowerCase();
+  if (s === 'r32' || s.includes('32')) return 'Round of 32';
+  if (s === 'r16' || s.includes('16')) return 'Round of 16';
+  if (s === 'qf' || s.includes('quarter')) return 'Quarter-Final';
+  if (s === 'sf' || s.includes('semi')) return 'Semi-Final';
+  if (s === 'final') return 'Final';
+  return stage || 'Knockout';
+}
+
+function renderActualKnockoutResults(rows) {
+  const grid = document.getElementById('actual-knockout-results-grid');
+  if (!grid) return;
+
+  const rowMap = {};
+  (rows || []).forEach(row => {
+    const slotId = getVisualKnockoutSlotId(row);
+    if (slotId && !rowMap[slotId]) {
+      rowMap[slotId] = row;
+    }
+  });
+
+  const completedCount = Object.keys(rowMap).length;
+
+  grid.innerHTML = `
+    <div class="knockout-geometry-wrap">
+      <div class="knockout-geometry-head">
+        <div>
+          <div class="results-kicker">Knockout Stage</div>
+          <div class="geometry-title">Road to the <span>Final</span></div>
+        </div>
+        <div class="geometry-count">${completedCount} completed</div>
+      </div>
+
+      <div class="knockout-geometry-board">
+        ${renderKnockoutGeometryColumn('left', 'r32', 'Round of 32', [1,2,3,4,5,6,7,8], rowMap)}
+        ${renderKnockoutGeometryColumn('left', 'r16', 'Round of 16', [1,2,3,4], rowMap)}
+        ${renderKnockoutGeometryColumn('left', 'qf', 'Quarter-Finals', [1,2], rowMap)}
+        ${renderKnockoutGeometryColumn('left', 'sf', 'Semi-Final', [1], rowMap)}
+
+        <div class="knockout-geometry-final">
+          <div class="geometry-stage-title">Final</div>
+          ${renderKnockoutFinalCard(rowMap['final_m1'])}
+        </div>
+
+        ${renderKnockoutGeometryColumn('right', 'sf', 'Semi-Final', [2], rowMap)}
+        ${renderKnockoutGeometryColumn('right', 'qf', 'Quarter-Finals', [3,4], rowMap)}
+        ${renderKnockoutGeometryColumn('right', 'r16', 'Round of 16', [5,6,7,8], rowMap)}
+        ${renderKnockoutGeometryColumn('right', 'r32', 'Round of 32', [9,10,11,12,13,14,15,16], rowMap)}
+      </div>
+    </div>
+  `;
+}
+
+function getVisualKnockoutSlotId(row) {
+  const id = String(row?.match_id || '').toLowerCase();
+  const internal = id.match(/^(r32|r16|qf|sf|final)_m\d+$/);
+  if (internal) return id;
+
+  const stage = String(row?.stage || '').toLowerCase();
+  const looksR32 = stage === 'r32' || stage.includes('32') || stage.includes('round of 32');
+  if (!looksR32) return null;
+
+  const home = toLocalTeamCode(row.home_code, row.home_name);
+  const away = toLocalTeamCode(row.away_code, row.away_name);
+  if (!home || !away) return null;
+
+  const slotIndex = R32_MATCHUPS.findIndex(pair => {
+    if (!pair || pair.length < 2) return false;
+    const a = toLocalTeamCode(pair[0], TEAM_DATA[pair[0]]);
+    const b = toLocalTeamCode(pair[1], TEAM_DATA[pair[1]]);
+    return (home === a && away === b) || (home === b && away === a);
+  });
+
+  return slotIndex >= 0 ? `r32_m${slotIndex + 1}` : null;
+}
+
+function renderKnockoutGeometryColumn(side, stageId, title, slots, rowMap) {
+  const completed = slots.filter(slot => rowMap[`${stageId}_m${slot}`]).length;
+  return `
+    <div class="knockout-geometry-col ${side} ${stageId}">
+      <div class="geometry-stage-title">${escape(title)} <span>${completed}/${slots.length}</span></div>
+      <div class="geometry-stage-stack ${side} ${stageId}">
+        ${slots.map(slot => renderKnockoutMatchCard(stageId, slot, rowMap[`${stageId}_m${slot}`], side)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderKnockoutMatchCard(stageId, slot, row, side = '') {
+  const meta = getBracketMatchMeta(stageId, slot, row);
+  const highlightClass = meta.completed ? ' highlight' : '';
+  const sideClass = side ? ` ${side}` : '';
+  return `
+    <div class="knockout-match-card${highlightClass}${sideClass}">
+      <div class="knockout-match-head">
+        <span>M${escape(slot)}</span>
+        <span class="knockout-match-status">${escape(meta.statusText)}</span>
+      </div>
+      ${renderKnockoutTeamLine(meta.home, meta.scores?.home, meta.winnerCode === meta.home.code)}
+      ${renderKnockoutTeamLine(meta.away, meta.scores?.away, meta.winnerCode === meta.away.code)}
+    </div>
+  `;
+}
+
+function renderKnockoutTeamLine(team, scoreValue, isWinner) {
+  const flag = team?.code ? `<img src="https://flagcdn.com/w40/${escape(team.code)}.png" alt="" loading="lazy">` : '<div style="width:22px;height:15px;border-radius:3px;background:rgba(255,255,255,.08);"></div>';
+  return `
+    <div class="knockout-team-line${isWinner ? ' winner' : ''}">
+      ${flag}
+      <div class="knockout-team-name">${escape(team?.name || 'TBD')}</div>
+      <div class="knockout-score-chip">${scoreValue !== null && scoreValue !== undefined ? escape(scoreValue) : '—'}</div>
+    </div>
+  `;
+}
+
+function getBracketMatchMeta(stageId, slot, row) {
+  const fallbackTeams = inferBracketPlaceholderTeams(stageId, slot);
+  const homeCode = row ? toLocalTeamCode(row.home_code, row.home_name) : (fallbackTeams.home?.code || '');
+  const awayCode = row ? toLocalTeamCode(row.away_code, row.away_name) : (fallbackTeams.away?.code || '');
+  const home = {
+    code: homeCode,
+    name: row?.home_name || teamName(homeCode, fallbackTeams.home?.name || 'TBD')
+  };
+  const away = {
+    code: awayCode,
+    name: row?.away_name || teamName(awayCode, fallbackTeams.away?.name || 'TBD')
+  };
+  const completed = !!row;
+  const winnerCode = row ? toLocalTeamCode(row.winner_code, row.winner_name) : '';
+  const statusText = completed ? 'Final' : (stageId === 'r32' ? 'Scheduled' : 'Pending');
+  return {
+    home,
+    away,
+    scores: completed ? { home: row.home_score, away: row.away_score } : null,
+    winnerCode,
+    completed,
+    statusText
+  };
+}
+
+function inferBracketPlaceholderTeams(stageId, slot) {
+  if (stageId === 'r32') {
+    const pair = R32_MATCHUPS[slot - 1] || [];
+    return {
+      home: pair[0] ? { code: pair[0], name: teamLabel(pair[0]) } : null,
+      away: pair[1] ? { code: pair[1], name: teamLabel(pair[1]) } : null
+    };
+  }
+  return {
+    home: { code: '', name: 'TBD' },
+    away: { code: '', name: 'TBD' }
+  };
+}
+
+function renderKnockoutFinalCard(finalRow) {
+  const winnerCode = finalRow ? toLocalTeamCode(finalRow.winner_code, finalRow.winner_name) : '';
+  const championName = finalRow?.winner_name || 'Awaiting Champion';
+  const championFlag = winnerCode ? `<img class="actual-flag" src="https://flagcdn.com/w40/${escape(winnerCode)}.png" alt="" loading="lazy">` : '';
+  const meta = finalRow
+    ? `${escape(finalRow.home_name)} ${escape(finalRow.home_score)}-${escape(finalRow.away_score)} ${escape(finalRow.away_name)}`
+    : 'Final to be decided';
+  return `
+    <div class="knockout-match-card knockout-final-card${finalRow ? ' highlight' : ''}">
+      <div class="knockout-final-title">World Cup Final</div>
+      <div class="knockout-trophy">🏆</div>
+      <div class="knockout-champion-name">${championFlag}${championFlag ? '&nbsp;' : ''}${escape(championName)}</div>
+      <div class="knockout-final-meta">${meta}</div>
+    </div>
+  `;
 }
 
 function getMatchKickoff(matchId) {
@@ -1930,7 +3106,562 @@ function downloadSubmittedBracketPDF() {
     return;
   }
   printWindow.document.write(`<!DOCTYPE html><html><head><title>Footy Futures Bracket</title>
-    <style>body{font-family:Arial,sans-serif;color:#111827;padding:28px;line-height:1.45}.topbar{display:flex;justify-content:space-between;border-bottom:3px solid #111827;padding-bottom:12px;margin-bottom:18px}h1{margin:0;font-size:30px;text-transform:uppercase}h2{margin-top:24px;border-bottom:2px solid #cbd5e1;padding-bottom:6px}h3{margin:18px 0 8px;text-transform:uppercase;font-size:15px}.meta{color:#475569;font-size:12px}.champion{border:1px solid #cbd5e1;background:#f8fafc;padding:12px;margin:16px 0;font-size:16px}table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:11px;page-break-inside:avoid}th,td{border:1px solid #cbd5e1;padding:6px;text-align:left;vertical-align:top}th{background:#f1f5f9}.group-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}button{padding:10px 14px;font-weight:700;cursor:pointer}@media print{button{display:none}body{padding:12px}}</style>
+    <style>body{font-family:Arial,sans-serif;color:#111827;padding:28px;line-height:1.45}.topbar{display:flex;justify-content:space-between;border-bottom:3px solid #111827;padding-bottom:12px;margin-bottom:18px}h1{margin:0;font-size:30px;text-transform:uppercase}h2{margin-top:24px;border-bottom:2px solid #cbd5e1;padding-bottom:6px}h3{margin:18px 0 8px;text-transform:uppercase;font-size:15px}.meta{color:#475569;font-size:12px}.champion{border:1px solid #cbd5e1;background:#f8fafc;padding:12px;margin:16px 0;font-size:16px}table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:11px;page-break-inside:avoid}th,td{border:1px solid #cbd5e1;padding:6px;text-align:left;vertical-align:top}th{background:#f1f5f9}.group-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}button{padding:10px 14px;font-weight:700;cursor:pointer}@media print{button{display:none}body{padding:12px}}
+
+  .knockout-bracket-wrap {
+    margin-top: 6px;
+  }
+  .knockout-bracket-board {
+    display: grid;
+    grid-template-columns: minmax(190px, 1fr) minmax(160px, .9fr) minmax(145px, .8fr) minmax(130px, .7fr) minmax(170px, .9fr) minmax(130px, .7fr) minmax(145px, .8fr) minmax(160px, .9fr) minmax(190px, 1fr);
+    gap: 14px;
+    align-items: start;
+    overflow-x: auto;
+    padding: 10px 4px 4px;
+  }
+  .knockout-stage-col {
+    min-width: 130px;
+  }
+  .stage-col-title {
+    text-align: center;
+    color: var(--accent-cyan);
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .stage-col-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .stage-col-stack.r16 { margin-top: 28px; gap: 38px; }
+  .stage-col-stack.qf { margin-top: 64px; gap: 82px; }
+  .stage-col-stack.sf { margin-top: 112px; gap: 178px; }
+  .knockout-match-card {
+    border: 1px solid rgba(0, 240, 255, .14);
+    background: linear-gradient(180deg, rgba(8, 15, 29, .94), rgba(7, 12, 22, .88));
+    border-radius: 12px;
+    padding: 9px 10px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.24);
+    min-height: 86px;
+  }
+  .knockout-match-card.highlight {
+    border-color: rgba(57, 255, 20, .32);
+    box-shadow: 0 0 0 1px rgba(57, 255, 20, .1), 0 12px 28px rgba(0,0,0,.28);
+  }
+  .knockout-match-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 7px;
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .knockout-match-status {
+    color: var(--accent-lime);
+  }
+  .knockout-team-line {
+    display: grid;
+    grid-template-columns: 18px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .knockout-team-line:last-of-type { border-bottom: none; }
+  .knockout-team-line img {
+    width: 18px;
+    height: 13px;
+    object-fit: cover;
+    border-radius: 2px;
+  }
+  .knockout-team-name {
+    color: var(--text-white);
+    font-size: 11px;
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .knockout-score-chip {
+    min-width: 24px;
+    text-align: center;
+    font-family: 'Anton', sans-serif;
+    font-size: 16px;
+    line-height: 1;
+    color: var(--accent-cyan);
+  }
+  .knockout-team-line.winner .knockout-team-name,
+  .knockout-team-line.winner .knockout-score-chip {
+    color: var(--accent-lime);
+  }
+  .knockout-match-foot {
+    margin-top: 7px;
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+  }
+  .knockout-final-col {
+    padding-top: 155px;
+  }
+  .knockout-final-card {
+    text-align: center;
+    padding: 14px 12px 16px;
+    min-height: 152px;
+    border: 1px solid rgba(57,255,20,.28);
+    background: radial-gradient(circle at 50% 18%, rgba(57,255,20,.12), transparent 36%), linear-gradient(180deg, rgba(13, 23, 42, .96), rgba(9, 15, 28, .92));
+  }
+  .knockout-final-title {
+    color: var(--accent-cyan);
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .knockout-trophy {
+    font-size: 34px;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .knockout-champion-name {
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--accent-lime);
+    margin-bottom: 8px;
+  }
+  .knockout-final-meta {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .knockout-bracket-note {
+    margin-top: 12px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  @media (max-width: 1180px) {
+    .knockout-bracket-board { width: max-content; min-width: 100%; }
+  }
+
+
+
+  /* ── Knockout Bracket Clean Responsive Upgrade ── */
+  .knockout-bracket-wrap {
+    margin-top: 8px;
+  }
+  .knockout-bracket-board {
+    display: block !important;
+    overflow-x: visible !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+  }
+  .knockout-mobile-board {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .knockout-stage-section {
+    border: 1px solid rgba(0, 240, 255, .12);
+    background: rgba(6, 12, 24, .36);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .knockout-stage-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .knockout-stage-title {
+    font-family: 'Anton', sans-serif;
+    color: var(--accent-cyan);
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+  }
+  .knockout-stage-count {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+  }
+  .knockout-stage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+  .knockout-stage-grid.compact {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .knockout-match-card {
+    border: 1px solid rgba(0, 240, 255, .14) !important;
+    background: linear-gradient(180deg, rgba(8, 15, 29, .94), rgba(7, 12, 22, .88)) !important;
+    border-radius: 14px !important;
+    padding: 11px 12px !important;
+    box-shadow: 0 10px 26px rgba(0,0,0,.22) !important;
+    min-height: 0 !important;
+  }
+  .knockout-match-card.highlight {
+    border-color: rgba(57, 255, 20, .38) !important;
+    background: linear-gradient(180deg, rgba(13, 26, 35, .96), rgba(7, 12, 22, .9)) !important;
+  }
+  .knockout-match-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
+    color: var(--text-muted) !important;
+    font-size: 9px !important;
+    font-weight: 950 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .8px !important;
+  }
+  .knockout-match-status {
+    border: 1px solid rgba(57,255,20,.28);
+    background: rgba(57,255,20,.08);
+    color: var(--accent-lime) !important;
+    border-radius: 999px;
+    padding: 3px 7px;
+    font-size: 8px;
+    white-space: nowrap;
+  }
+  .knockout-team-line {
+    display: grid !important;
+    grid-template-columns: 22px 1fr auto !important;
+    gap: 8px !important;
+    align-items: center !important;
+    padding: 7px 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,.055) !important;
+  }
+  .knockout-team-line:last-of-type { border-bottom: none !important; }
+  .knockout-team-line img {
+    width: 22px !important;
+    height: 15px !important;
+    object-fit: cover !important;
+    border-radius: 3px !important;
+    border: 1px solid rgba(255,255,255,.15);
+  }
+  .knockout-team-name {
+    color: var(--text-white) !important;
+    font-size: 12px !important;
+    font-weight: 850 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .knockout-score-chip {
+    min-width: 28px !important;
+    text-align: center !important;
+    font-family: 'Anton', sans-serif !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    color: var(--accent-cyan) !important;
+  }
+  .knockout-team-line.winner .knockout-team-name,
+  .knockout-team-line.winner .knockout-score-chip {
+    color: var(--accent-lime) !important;
+  }
+  .knockout-match-foot { display: none !important; }
+  .knockout-final-card {
+    text-align: center !important;
+    padding: 18px 14px !important;
+    min-height: 0 !important;
+    border: 1px solid rgba(57,255,20,.34) !important;
+    background: radial-gradient(circle at 50% 16%, rgba(57,255,20,.16), transparent 34%), linear-gradient(180deg, rgba(13, 23, 42, .96), rgba(9, 15, 28, .92)) !important;
+  }
+  .knockout-final-title {
+    color: var(--accent-cyan) !important;
+    font-size: 10px !important;
+    font-weight: 950 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    margin-bottom: 10px !important;
+  }
+  .knockout-trophy {
+    font-size: 34px !important;
+    line-height: 1 !important;
+    margin-bottom: 10px !important;
+  }
+  .knockout-champion-name {
+    font-family: 'Anton', sans-serif !important;
+    font-size: 28px !important;
+    line-height: .95 !important;
+    text-transform: uppercase !important;
+    color: var(--accent-lime) !important;
+    margin-bottom: 10px !important;
+  }
+  .knockout-final-meta {
+    color: var(--text-muted) !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .8px !important;
+  }
+  .knockout-bracket-note { display: none !important; }
+  @media (max-width: 720px) {
+    .knockout-stage-section { padding: 12px; }
+    .knockout-stage-grid,
+    .knockout-stage-grid.compact { grid-template-columns: 1fr; }
+    .knockout-stage-header { flex-direction: column; align-items: flex-start; gap: 5px; }
+  }
+
+
+
+  /* ── Knockout Geometry Bracket Final Pass ── */
+  #actual-knockout-results-grid {
+    width: 100%;
+  }
+  .knockout-geometry-wrap {
+    margin-top: 6px;
+    border: 1px solid rgba(0, 240, 255, .16);
+    background:
+      radial-gradient(circle at 50% 50%, rgba(57, 255, 20, .07), transparent 28%),
+      linear-gradient(90deg, rgba(0, 240, 255, .035) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(0, 240, 255, .028) 1px, transparent 1px),
+      rgba(5, 13, 23, .72);
+    background-size: auto, 64px 64px, 64px 64px, auto;
+    border-radius: 18px;
+    padding: 16px;
+    overflow: hidden;
+    box-shadow: inset 0 0 50px rgba(0,0,0,.22), 0 14px 34px rgba(0,0,0,.26);
+  }
+  .knockout-geometry-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .geometry-title {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(26px, 3.4vw, 42px);
+    line-height: .92;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+  }
+  .geometry-title span { color: var(--accent-lime); }
+  .geometry-count {
+    border: 1px solid rgba(57,255,20,.28);
+    background: rgba(57,255,20,.07);
+    color: var(--accent-lime);
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .knockout-geometry-board {
+    display: grid !important;
+    grid-template-columns: 1.08fr .98fr .88fr .78fr 1.05fr .78fr .88fr .98fr 1.08fr !important;
+    gap: 9px !important;
+    align-items: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .knockout-geometry-col,
+  .knockout-geometry-final {
+    min-width: 0;
+  }
+  .geometry-stage-title {
+    min-height: 26px;
+    color: var(--accent-cyan);
+    font-size: clamp(7px, .74vw, 10px);
+    font-weight: 950;
+    letter-spacing: .9px;
+    text-align: center;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+    white-space: normal;
+  }
+  .geometry-stage-title span {
+    color: var(--text-muted);
+    display: block;
+    font-size: 8px;
+    letter-spacing: .4px;
+    margin-top: 2px;
+  }
+  .geometry-stage-stack {
+    display: flex;
+    flex-direction: column;
+  }
+  .geometry-stage-stack.r32 { gap: 8px; }
+  .geometry-stage-stack.r16 { margin-top: 30px; gap: 43px; }
+  .geometry-stage-stack.qf  { margin-top: 94px; gap: 132px; }
+  .geometry-stage-stack.sf  { margin-top: 232px; }
+  .knockout-geometry-final { margin-top: 288px; }
+  .knockout-match-card {
+    position: relative;
+    min-height: 66px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(0, 240, 255, .16) !important;
+    background: rgba(5, 10, 20, .90) !important;
+    padding: 7px 8px !important;
+    box-shadow: 0 8px 18px rgba(0,0,0,.18) !important;
+  }
+  .knockout-match-card.highlight {
+    border-color: rgba(57,255,20,.44) !important;
+    background: linear-gradient(180deg, rgba(12, 31, 31, .95), rgba(5, 10, 20, .92)) !important;
+  }
+  .knockout-match-card.left::after,
+  .knockout-match-card.right::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 9px;
+    height: 1px;
+    background: rgba(0, 240, 255, .26);
+  }
+  .knockout-match-card.left::after { right: -10px; }
+  .knockout-match-card.right::before { left: -10px; }
+  .knockout-geometry-col.sf .knockout-match-card.left::after,
+  .knockout-geometry-col.sf .knockout-match-card.right::before { background: rgba(57,255,20,.32); }
+  .knockout-match-head {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 4px !important;
+    color: var(--text-muted) !important;
+    font-size: 8px !important;
+    font-weight: 950 !important;
+    letter-spacing: .55px !important;
+    text-transform: uppercase !important;
+  }
+  .knockout-match-status {
+    border: 1px solid rgba(0,240,255,.16) !important;
+    background: rgba(0,240,255,.05) !important;
+    color: var(--text-muted) !important;
+    border-radius: 999px !important;
+    padding: 2px 5px !important;
+    font-size: 7px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+  .knockout-match-card.highlight .knockout-match-status {
+    border-color: rgba(57,255,20,.36) !important;
+    background: rgba(57,255,20,.09) !important;
+    color: var(--accent-lime) !important;
+  }
+  .knockout-team-line {
+    display: grid !important;
+    grid-template-columns: 18px minmax(0, 1fr) auto !important;
+    gap: 6px !important;
+    align-items: center !important;
+    padding: 4px 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,.052) !important;
+  }
+  .knockout-team-line img {
+    width: 18px !important;
+    height: 13px !important;
+    object-fit: cover !important;
+    border-radius: 2px !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+  }
+  .knockout-team-name {
+    color: var(--text-white) !important;
+    font-size: clamp(9px, .78vw, 11px) !important;
+    font-weight: 850 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .knockout-score-chip {
+    min-width: 18px !important;
+    text-align: right !important;
+    font-family: 'Anton', sans-serif !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+    color: var(--accent-cyan) !important;
+  }
+  .knockout-team-line.winner .knockout-team-name,
+  .knockout-team-line.winner .knockout-score-chip {
+    color: var(--accent-lime) !important;
+  }
+  .knockout-final-card {
+    min-height: 150px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    text-align: center !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(57,255,20,.38) !important;
+    background: radial-gradient(circle at 50% 20%, rgba(57,255,20,.16), transparent 38%), rgba(5,10,20,.94) !important;
+    padding: 13px 10px !important;
+  }
+  .knockout-final-title {
+    color: var(--accent-cyan) !important;
+    font-size: 9px !important;
+    font-weight: 950 !important;
+    letter-spacing: .9px !important;
+    text-transform: uppercase !important;
+    margin-bottom: 8px !important;
+  }
+  .knockout-trophy { font-size: 30px !important; margin-bottom: 8px !important; }
+  .knockout-champion-name {
+    font-family: 'Anton', sans-serif !important;
+    font-size: clamp(22px, 2vw, 30px) !important;
+    line-height: .92 !important;
+    color: var(--accent-lime) !important;
+    text-transform: uppercase !important;
+    margin-bottom: 8px !important;
+  }
+  .knockout-final-meta {
+    color: var(--text-muted) !important;
+    font-size: 9px !important;
+    font-weight: 900 !important;
+    letter-spacing: .6px !important;
+    text-transform: uppercase !important;
+  }
+  .knockout-bracket-note,
+  .knockout-match-foot { display: none !important; }
+
+  @media (max-width: 980px) {
+    .knockout-geometry-board {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+    }
+    .knockout-geometry-col,
+    .knockout-geometry-final { margin-top: 0 !important; }
+    .geometry-stage-stack,
+    .geometry-stage-stack.r16,
+    .geometry-stage-stack.qf,
+    .geometry-stage-stack.sf {
+      margin-top: 0 !important;
+      gap: 8px !important;
+    }
+    .knockout-match-card.left::after,
+    .knockout-match-card.right::before { display: none !important; }
+    .geometry-stage-title { font-size: 10px; }
+  }
+  @media (max-width: 640px) {
+    .knockout-geometry-wrap { padding: 12px; }
+    .knockout-geometry-head { flex-direction: column; }
+    .knockout-geometry-board { grid-template-columns: 1fr !important; }
+    .knockout-team-name { font-size: 12px !important; }
+  }
+
+</style>
     </head><body><button onclick="window.print()">Save as PDF</button><div class="topbar"><div><h1>Footy Futures Bracket</h1><div class="meta">Player: ${escape(data.display_name)}<br>Submitted: ${escape(new Date(data.submitted_at || data.exported_at).toLocaleString())}</div></div><div class="meta">Proof of prediction</div></div><div class="champion"><strong>Predicted Champion:</strong> ${escape(champion)}<br><strong>Tiebreaker:</strong> ${escape(totalGoals)} total goals</div><h2>Group Standings</h2><div class="group-grid">${groupHtml}</div><h2>Knockout Path</h2>${koHtml}<script>setTimeout(()=>window.print(),500);<\/script></body></html>`);
   printWindow.document.close();
 }
