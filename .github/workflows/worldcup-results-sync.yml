@@ -159,26 +159,154 @@ jobs:
             return null;
           }
 
+          function readPath(obj, path) {
+            return path.reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
+          }
+
+          function firstNumber(match, paths) {
+            for (const path of paths) {
+              const value = Array.isArray(path) ? readPath(match, path) : match[path];
+              if (value === null || value === undefined || value === "") continue;
+              const n = Number(value);
+              if (Number.isFinite(n)) return n;
+            }
+            return null;
+          }
+
+          function getPenaltyScores(match) {
+            const home = firstNumber(match, [
+              ["penalties", "home"],
+              ["penalty", "home"],
+              ["penaltyScore", "home"],
+              ["penaltyScores", "home"],
+              ["shootout", "home"],
+              ["score", "penalties", "home"],
+              ["scores", "penalties", "home"],
+              ["periods", "penalties", "home"],
+              "penaltiesHome",
+              "homePenalties",
+              "homePenaltyScore",
+              "penaltyHome",
+              "shootoutHome"
+            ]);
+
+            const away = firstNumber(match, [
+              ["penalties", "away"],
+              ["penalty", "away"],
+              ["penaltyScore", "away"],
+              ["penaltyScores", "away"],
+              ["shootout", "away"],
+              ["score", "penalties", "away"],
+              ["scores", "penalties", "away"],
+              ["periods", "penalties", "away"],
+              "penaltiesAway",
+              "awayPenalties",
+              "awayPenaltyScore",
+              "penaltyAway",
+              "shootoutAway"
+            ]);
+
+            return { home, away, has: home !== null && away !== null };
+          }
+
+          function getExtraTimeScores(match) {
+            const home = firstNumber(match, [
+              ["afterExtraTime", "home"],
+              ["extraTime", "home"],
+              ["aet", "home"],
+              ["score", "afterExtraTime", "home"],
+              ["score", "extraTime", "home"],
+              ["scores", "afterExtraTime", "home"],
+              ["scores", "extraTime", "home"],
+              ["periods", "extra_time", "home"],
+              ["periods", "extraTime", "home"],
+              "afterExtraTimeHome",
+              "extraTimeHome",
+              "aetHome",
+              "homeAfterExtraTime",
+              "homeExtraTimeScore"
+            ]);
+
+            const away = firstNumber(match, [
+              ["afterExtraTime", "away"],
+              ["extraTime", "away"],
+              ["aet", "away"],
+              ["score", "afterExtraTime", "away"],
+              ["score", "extraTime", "away"],
+              ["scores", "afterExtraTime", "away"],
+              ["scores", "extraTime", "away"],
+              ["periods", "extra_time", "away"],
+              ["periods", "extraTime", "away"],
+              "afterExtraTimeAway",
+              "extraTimeAway",
+              "aetAway",
+              "awayAfterExtraTime",
+              "awayExtraTimeScore"
+            ]);
+
+            return { home, away, has: home !== null && away !== null };
+          }
+
+          function readApiWinnerName(match) {
+            const candidates = [
+              match.winnerName,
+              match.winnerTeam,
+              match.winner,
+              match.winner?.name,
+              match.result?.winnerName,
+              match.result?.winner,
+              match.result?.winner?.name
+            ];
+            return String(candidates.find(Boolean) || "").trim();
+          }
+
           function getResolutionMethod(match) {
             const status = String(match.status || "").toLowerCase();
-            const hasPens =
-              match.penalties?.home !== null && match.penalties?.home !== undefined &&
-              match.penalties?.away !== null && match.penalties?.away !== undefined;
+            const pens = getPenaltyScores(match);
+            const aet = getExtraTimeScores(match);
+            const apiWinner = readApiWinnerName(match);
 
-            if (hasPens || status.includes("pen")) return "penalties";
-            if (match.extraTime || status.includes("aet") || status.includes("extra")) return "extra_time";
+            if (pens.has || status.includes("pen") || status.includes("shootout")) return "penalties";
+            if (aet.has && aet.home !== aet.away) return "extra_time";
+            if (status.includes("aet") || status.includes("extra")) return "extra_time";
+
+            // If a knockout game is listed as a draw on scoreline but has a winner,
+            // the missing resolution is almost always penalties.
+            if (
+              Number(match.homeScore) === Number(match.awayScore) &&
+              apiWinner &&
+              String(match.stage || "").toLowerCase() !== "group"
+            ) {
+              return "penalties";
+            }
+
             return "regular_time";
           }
 
           function winner(match, homeCode, awayCode) {
             if (match.homeScore === null || match.homeScore === undefined) return { code: null, name: null };
             if (match.awayScore === null || match.awayScore === undefined) return { code: null, name: null };
+
             if (Number(match.homeScore) > Number(match.awayScore)) return { code: homeCode, name: match.homeTeam };
             if (Number(match.awayScore) > Number(match.homeScore)) return { code: awayCode, name: match.awayTeam };
 
-            if (match.penalties && match.penalties.home !== null && match.penalties.home !== undefined && match.penalties.away !== null && match.penalties.away !== undefined) {
-              if (Number(match.penalties.home) > Number(match.penalties.away)) return { code: homeCode, name: match.homeTeam };
-              if (Number(match.penalties.away) > Number(match.penalties.home)) return { code: awayCode, name: match.awayTeam };
+            const pens = getPenaltyScores(match);
+            if (pens.has) {
+              if (pens.home > pens.away) return { code: homeCode, name: match.homeTeam };
+              if (pens.away > pens.home) return { code: awayCode, name: match.awayTeam };
+            }
+
+            const aet = getExtraTimeScores(match);
+            if (aet.has) {
+              if (aet.home > aet.away) return { code: homeCode, name: match.homeTeam };
+              if (aet.away > aet.home) return { code: awayCode, name: match.awayTeam };
+            }
+
+            const apiWinner = readApiWinnerName(match);
+            if (apiWinner) {
+              const apiWinnerCode = normTeam(apiWinner);
+              if (apiWinnerCode === homeCode) return { code: homeCode, name: match.homeTeam };
+              if (apiWinnerCode === awayCode) return { code: awayCode, name: match.awayTeam };
             }
 
             return { code: null, name: null };
@@ -291,6 +419,8 @@ jobs:
 
             const win = winner(match, homeCode, awayCode);
             const resolutionMethod = getResolutionMethod(match);
+            const penalties = getPenaltyScores(match);
+            const extraTime = getExtraTimeScores(match);
             const nowIso = new Date().toISOString();
 
             rows.push({
@@ -303,10 +433,10 @@ jobs:
               away_name: match.awayTeam,
               home_score: homeScore,
               away_score: awayScore,
-              after_extra_time_home: null,
-              after_extra_time_away: null,
-              penalties_home: match.penalties?.home ?? null,
-              penalties_away: match.penalties?.away ?? null,
+              after_extra_time_home: extraTime.home,
+              after_extra_time_away: extraTime.away,
+              penalties_home: penalties.home,
+              penalties_away: penalties.away,
               winner_code: win.code,
               winner_name: win.name,
               resolution_method: resolutionMethod,
